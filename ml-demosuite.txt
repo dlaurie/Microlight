@@ -1,0 +1,366 @@
+Demo of Microlight 1.1-1+experimental under Lua 5.2
+
+In the documentation, Boolean constants are written `true` and `false`.
+Without the backquotes, the words refer to Lua truth values, i.e. false
+is `false` or `nil`, and true is anything else except not-a-number.
+
+In all Microlight functions that expect a function parameter (except 
+those expecting an iterator), the actual parameter may be anything 
+callable or a string containing an expression involving X,Y,Z.
+
+The function `near` appearing in some examples tests whether two
+numbers are equal to a tolerance of 0.002.
+
+Microlight information utilities
+
+----- callable -----
+--- is the object either a function or a callable object?.
+-- @param obj Object to check.
+-- @return true if callable
+= callable(near)
+true
+= callable(ml)
+function: 0x9af0280
+= callable(_G)
+nil
+
+----- count -----
+--- return the number of keys in this table, or members in this set.
+-- @param t a table
+-- @treturn int key count
+= count(ml)
+36
+
+----- indexof -----
+--- return the first index of an item in an array.
+-- @param t the array
+-- @param value item value
+-- @param cmp optional comparison function (default is `X==Y`)
+-- @return index, otherwise `nil`
+= indexof({1.9, 1.99, 1.999, 1.9999, 2},2,near)
+3
+
+----- tstring -----
+--- return a string representation of a Lua value.
+-- Cycles are detected, and the appearance of the result can be customized.
+-- @param t the value to be represented
+-- @param how (optional) a table or string containing customization info,
+--    ignored unless t is a table; stays in effect until overridden
+--    how.sep: separator appearing after scalar item
+--    how.tsep: separator appearing after table-valued item
+--    how.wrap: length of lines to aim for
+--    how.indent: indentation string (implies one item to a line)
+--    If `how` is a string, it is used as indentation string.
+-- @return a string
+= tstring({{1,2},{3,4}},{sep="; ",tsep=",  "})
+"{{1; 2},  {3; 4}}"
+= tstring({{1,2},{3,4}},{})
+"{{1,2};{3,4}}"
+
+Microlight string utilities. The first parameter is a string.
+
+----- escape -----
+--- escape any 'magic' pattern characters in a string.
+-- Useful for functions like `string.gsub` and `string.match` which
+-- always work with Lua string patterns.
+-- For any s, `s:match('^'..escape(s)..'$') == s` is `true`.
+-- @param s The input string
+-- @return an escaped string
+> s='%w+'; return s:match('^'..escape(s)..'$') == s
+true
+
+----- expand -----
+--- expand a string containing any `${var}` or `$var`.
+-- If the former form is found, the latter is not looked for, so
+--   pick _either one_ of these forms consistently!
+-- Substitution values should be only numbers or strings.
+-- @param s the string
+-- @param subst either a table or a function (as in `string.gsub`)
+-- @return expanded string
+= expand('$x $y ${z}',{x=1,y=2,z=3})
+"$x $y 3"
+
+----- split -----
+--- split a delimited string into an array of strings.
+-- @param s The input string
+-- @param re A Lua string pattern; defaults to '%s+'. Patterns with 
+--    magic `+` at the end do not produce empty pieces.
+-- @param n optional maximum number of splits, tail returned unsplit
+-- @return an array of strings
+= split" the quick brown fox "
+{"the","quick","brown","fox"}
+= split(",a,,b,c,,",",")
+{"","a","","b","c","",""}
+
+Microlight file utilities. The first parameter is a filename.
+
+----- exists -----
+--- Does a file exist?
+-- @param filename a file path
+-- @return the file path, otherwise nil
+-- @usage file = exists 'readme' or exists 'readme.txt' or exists 'readme.md'
+= exists"ml.lua"
+"ml.lua"
+
+----- readfile -----
+--- return the contents of a file as a string
+-- @param filename The file path
+-- @param is_bin open in binary mode, default false
+-- @return file contents, or nil,error
+> writefile("tmp.txt",tstring{1,2,3}); return readfile"tmp.txt"
+"{1,2,3}"
+
+----- splitext -----
+--- split a path into root and extension part.
+-- if there's no extension part, the second value will be empty
+-- @param P A file path
+-- @return the name part
+-- @return the extension
+= splitext"/usr/local/share/lua/5.2/ml.lua"
+"/usr/local/share/lua/5.2/ml"	".lua"
+
+----- splitpath -----
+--- split a path into directory and file part.
+-- if there's no directory part, the first value will be the empty string.
+-- Handles both forward and back-slashes on Windows.
+-- @param P A file path
+-- @return the directory part
+-- @return the file part
+= splitpath"/usr/local/share/lua/5.2/ml.lua"
+"/usr/local/share/lua/5.2"	"ml.lua"
+
+----- writefile -----
+--- write a string to a file,
+-- @param filename The file path
+-- @param str The string
+-- @param is_bin open in binary mode, default false
+-- @return true or nil,error
+> writefile("tmp.txt",tstring{1,2,3}); return readfile"tmp.txt"
+"{1,2,3}"
+
+Microlight mutating table utilities. The first parameter is a table.
+
+----- apply -----
+--- apply a function to each element of an array.
+-- @param t the array
+-- @param f a function of one or more arguments
+-- @param ... any extra arguments to the function
+-- @return the transformed array
+= apply({1,4,9},math.sqrt)
+{1,2,3}
+
+----- extend -----
+--- extend an array using values from other tables.
+-- @{readme.md.Extracting_and_Mapping}
+-- @param t the array to be extended
+-- @param ... the other arrays
+-- @return the extended array
+= extend({1,2,3},{4,5,6})
+{1,2,3,4,5,6}
+
+----- import -----
+-- Bring modules or tables into 't`.
+-- If `lib` is a string, then it becomes the result of `require`
+-- With only one argument, the second argument is assumed to be
+-- the `ml` table itself.
+-- @param t table to be updated, or current environment
+-- @param lib table, module name or `nil` for importing 'ml'
+-- @return the updated table
+> import(nil,math); return floor(pi)
+3
+
+----- removerange -----
+--- delete a range of values from an array.
+-- @param tbl the array
+-- @param start start index
+-- @param finish end index (like `ml.sub`)
+-- NB Like table.remove, does not return `tbl`
+> t={1,2,3,4,5,6}; removerange(t,2,5); return t
+{1,6}
+
+----- update -----
+--- add the key/value pairs of arrays to the first array.
+-- For sets, this is their union. For the same keys,
+-- the values from the first table will be overwritten.
+-- @param t table to be updated
+-- @param ... tables containg more pairs to be added
+-- @return the updated table
+= update({A=1,B=2},{Z=26})
+{B=2,A=1,Z=26}
+
+Microlight table-creating utilities. The return value is a table.
+
+----- collect -----
+--- collect a series of values from an iterator.
+-- @param ... iterator
+-- @return array-like table
+-- @usage collect(pairs(t)) gives an unsorted version of keylist(t)
+= collect(("26 Nov 2013"):gmatch"%d+")
+{"26","2013"}
+
+----- ifilter -----
+--- filter an array using a predicate.
+-- @param t a table
+-- @param pred a function that must return `nil` or `false`
+-- to exclude a value
+-- @param ... any extra arguments to the predicate
+-- @return a new array such that `pred(t[i])` evaluates as true
+= ifilter({1,3,5,7},'X>=4')
+{5,7}
+
+----- ifind -----
+--- find an item in an array using a predicate.
+-- @param t the array
+-- @param pred a function of at least one argument
+-- @param ... any extra arguments
+-- @return the item value, or `nil`
+-- @usage ifind({{1,2},{4,5}},'X[1]==Y',4) is {4,5}
+= ifind({{1,2},{4,5}},'X[1]==Y',4)
+{4,5}
+
+----- indexby -----
+--- make an array of indexed values.
+-- Generalized table indexing. Result will only contain
+-- values for keys that exist.
+-- @param t a table
+-- @param keys an array of keys or indices
+-- @return an array `L` such that `L[keys[i]]`
+-- @usage indexby({one=1,two=2},{'one','three'}) is {1}
+-- @usage indexby({10,20,30,40},{2,4}) is {20,40}
+= indexby({one=1,two=2},{'one','three'})
+{1}
+= indexby({10,20,30,40},{2,4})
+{20,40}
+
+----- invert -----
+--- Invert keys and values in a table.
+-- @param t a table
+-- @return a table where keys and values swap places
+-- @usage invert{'one','two'} is {one=1,two=2}
+= invert{A='a',B='b'}
+{a="A",b="B"}
+
+----- keylist -----
+--- extract the keys of a table as an array.
+-- @param t a table
+-- @return an array of keys (sorted)
+= keylist(ml)
+{"ML_VERSION","apply","bag","bind","callable","collect","compose","count","equalkeys","escape","exists","expand","extend","ifilter","ifind","imap","imap2","import","indexby","indexof","invert","issubset","keylist","makemap","memoize","range","readfile","removerange","split","splitext","splitpath","sub","throw","tstring","update","writefile"}
+
+----- makemap -----
+--- make a table from an array of keys and an array of values.
+-- @param t an array of keys
+-- @param tv an array of values
+-- @return a table where `{[t[i]]=tv[i]}`
+-- @usage makemap({'power','glory'},{20,30}) is {power=20,glory=30}
+= makemap({'power','glory'},{20,30})
+{glory=30,power=20}
+
+----- range -----
+--- create an array of numbers from start to end.
+-- With one argument it goes `1..x1`. `d` may be a
+-- floating-point fraction
+-- @param x1 start value
+-- @param x2 end value
+-- @param d increment (default 1)
+-- @return array of numbers
+-- @usage range(2,10) is {2,3,4,5,6,7,8,9,10}
+-- @usage range(5) is {1,2,3,4,5}
+= range(5)
+{1,2,3,4,5}
+= range(2,10)
+{2,3,4,5,6,7,8,9,10}
+
+----- sub -----
+--- return a slice of an array.
+-- Like `string.sub`, the end index may be negative.
+-- @param t the array
+-- @param i1 the start index, default 1
+-- @param i2 the end index, default #t (like `string.sub`)
+-- @return a new array containing `t[i]` in the specified range
+= sub({1,2,3,4,5,6,7,8,9,10},-7)
+{[12]=4,[13]=5,[14]=6,[15]=7,[16]=8,[17]=9,[9]=1,[10]=2,[11]=3,[18]=10}
+
+Microlight set manipulation utilities. The first parameter is a table.
+A set consists of the keys of a table.
+
+----- bag -----
+--- make a bag (multiset) from a table; can be used as a set
+-- @param t a table
+-- @return a table of the number of times each key appears as a value in t
+-- @usage bag{3,5,6,5,7,3,5} is {[7]=1,[5]=3,[3]=2,[6]=1}
+= bag{3,5,6,5,7,3,5}
+{[7]=1,[5]=3,[3]=2,[6]=1}
+
+----- equalkeys -----
+--- set equality: do these tables have the same keys?
+-- @param t a table
+-- @param other a table
+-- @return true or false
+= equalkeys({create=1,resume=2,running=3,status=4,wrap=5,yield=6},coroutine)
+true
+
+----- issubset -----
+--- are all the keys of `other` in `t`?
+-- @param t a set (i.e. a table whose keys are the set elements)
+-- @param other a possible subset
+-- @treturn bool
+= issubset({resume=1,yield=2},coroutine)
+false
+= issubset({1,2,3,4},{5,6,7,8,9})
+false
+
+Microlight function utilities. The first parameter is anything callable,
+or an expression involving X,Y,Z, taken to be the first three parameters 
+supplied later. 
+
+----- bind -----
+--- bind values to the arguments of function `f`.
+-- @param f a function of at least one argument
+-- @param ... values to bind (nil leaves an argument free)
+-- @return a function of fewer arguments (by the number of bound values)
+-- @usage interior = bind(string.sub,nil,2,-2)
+> interior = bind(string.sub,nil,2,-2); return interior'<remark>'
+"remark"
+
+----- compose -----
+--- compose two functions.
+-- For instance, `printf` can be defined as `compose(io.write,string.format)`
+-- @param f1 a function
+-- @param f2 a function
+-- @return `f1(f2(...))`
+> g=compose(sqrt,"X+1"); return g(8)
+3
+
+----- imap -----
+--- map a function over an array.
+-- The output must always be the same length as the input, so
+-- any `nil` values are mapped to `false`.
+-- @param f a function of one or more arguments
+-- @param t the array
+-- @param ... any extra arguments to the function
+-- @return a new array with elements `f(t[i],...)`
+
+----- imap2 -----
+--- map a function over values from two arrays.
+-- Length of output is the size of the smallest array.
+-- @param f a function of two or more arguments
+-- @param t1 first array
+-- @param t2 second array
+-- @param ... any extra arguments to the function
+-- @return a new array with elements `f(t1[i],t2[i],...)`
+
+----- memoize -----
+--- 'memoize' a function (cache returned value for next call).
+-- This is useful if you have a function which is relatively expensive,
+-- but you don't know in advance what values will be required, so
+-- building a table upfront is wasteful/impossible.
+-- @param func a function of at least one argument
+-- @return a function with at least one argument, which is used as the key.
+
+----- throw -----
+--- create a function which will throw an error on failure.
+-- @param f a function that returns nil,err if it fails
+-- @return an equivalent function that raises an error
+-- @usage openfile=throw(io.open); myfile=openfile'junk.txt'
+> openfile=throw(io.open); return openfile'junk.txt'
