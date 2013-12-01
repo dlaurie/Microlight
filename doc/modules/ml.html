@@ -1,0 +1,1367 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Microlight</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Microlight</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#String_utilties">String utilties </a></li>
+<li><a href="#File_and_Path_functions">File and Path functions </a></li>
+<li><a href="#Table_utilities">Table utilities </a></li>
+<li><a href="#Object_like_array_functions">Object-like array functions </a></li>
+<li><a href="#Set_functions">Set functions </a></li>
+<li><a href="#Functional_helpers">Functional helpers </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><strong>ml</strong></li>
+  <li><a href="../modules/ml-extra.html">ml-extra</a></li>
+</ul>
+<h2>Topics</h2>
+<ul class="nowrap">
+  <li><a href="../topics/readme.md.html">readme.md</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>ml</code></h1>
+
+<p>Microlight - a very compact Lua utilities module
+<p> Some local functions used in the Microlight code also show up in the
+ HTML documentation made by LDoc.</p>
+<p> You can use them from Microlight by
+ `require"ml-extra"` either instead or after requiring `ml`.
+<p> Caveat: this has been designed with Lua 5.2 in mind.  The present
+    version works on Lua 5.1 too but backwards compatibility must
+    not be taken for granted in future versions.
+<p> Steve Donovan, 2012; Dirk Laurie, 2013; License MIT</p>
+
+
+<h2><a href="#String_utilties">String utilties </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#split">split (s, re, n)</a></td>
+	<td class="summary">split a delimited string into an array of strings.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#escape">escape (s)</a></td>
+	<td class="summary">escape any 'magic' pattern characters in a string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#expand">expand (s, subst)</a></td>
+	<td class="summary">expand a string containing any `${var}` or `$var`.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#quote">quote (v, raw)</a></td>
+	<td class="summary">quoted string or raw tostring (local)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#tstring">tstring (t, how)</a></td>
+	<td class="summary">return a string representation of a Lua value.</td>
+	</tr>
+</table>
+<h2><a href="#File_and_Path_functions">File and Path functions </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#readfile">readfile (filename, is_bin)</a></td>
+	<td class="summary">return the contents of a file as a string</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#writefile">writefile (filename, str, is_bin)</a></td>
+	<td class="summary">write a string to a file,</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#exists">exists (filename)</a></td>
+	<td class="summary">Does a file exist?</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#splitpath">splitpath (P)</a></td>
+	<td class="summary">split a path into directory and file part.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#splitext">splitext (P)</a></td>
+	<td class="summary">split a path into root and extension part.</td>
+	</tr>
+</table>
+<h2><a href="#Table_utilities">Table utilities </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#new">new (...)</a></td>
+	<td class="summary">new empty object of same type as argument (local)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#metafield">metafield (t, key)</a></td>
+	<td class="summary">metafield of an object (local)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#collect">collect (count, ...)</a></td>
+	<td class="summary">collect a series of values from an iterator.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#range">range (x1, x2, d)</a></td>
+	<td class="summary">create an array of numbers from start to end.</td>
+	</tr>
+</table>
+<h2><a href="#Object_like_array_functions">Object-like array functions </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#apply">apply (t, f, ...)</a></td>
+	<td class="summary">apply a function to each element of an array.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ifilter">ifilter (t, pred, ...)</a></td>
+	<td class="summary">filter an array using a predicate.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ifind">ifind (t, pred, ...)</a></td>
+	<td class="summary">find an item in an array using a predicate.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#indexof">indexof (t, value, cmp)</a></td>
+	<td class="summary">return the first index of an item in an array.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#sub">sub (t, i1, i2)</a></td>
+	<td class="summary">return a slice of an array.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#removerange">removerange (tbl, start, finish)</a></td>
+	<td class="summary">delete a range of values from an array.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#insertinto">insertinto (dest, index, src, overwrite)</a></td>
+	<td class="summary">copy values from `src` into `dest` starting at `index` (local).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#extend">extend (t, ...)</a></td>
+	<td class="summary">extend an array using values from other tables.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#indexby">indexby (t, keys)</a></td>
+	<td class="summary">make an array of indexed values.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#update">update (t, ...)</a></td>
+	<td class="summary">add the key/value pairs of the other tables to the first table.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#makemap">makemap (t, tv)</a></td>
+	<td class="summary">make a table from an array of keys and an array of values.</td>
+	</tr>
+</table>
+<h2><a href="#Set_functions">Set functions </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#bag">bag (t)</a></td>
+	<td class="summary">make a bag (multiset) from a table; can be used as a set</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#invert">invert (t)</a></td>
+	<td class="summary">Invert keys and values in a table.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#keys">keys (t)</a></td>
+	<td class="summary">extract the keys of a table as an array.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#contains">contains (t, other)</a></td>
+	<td class="summary">are all the keys of `other` in `t`?</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#count">count (t)</a></td>
+	<td class="summary">return the number of keys in this table, i.e.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#equalkeys">equalkeys (t, other)</a></td>
+	<td class="summary">set equality: do these tables have the same keys?</td>
+	</tr>
+</table>
+<h2><a href="#Functional_helpers">Functional helpers </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#throw">throw (f)</a></td>
+	<td class="summary">create a function which will throw an error on failure.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bind">bind (f, ...)</a></td>
+	<td class="summary">bind values to the arguments of function `f`.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#compose">compose (f1, f2)</a></td>
+	<td class="summary">compose two functions.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#callable">callable (obj)</a></td>
+	<td class="summary">is the object either a function or a callable object?.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#function_arg">function_arg (f)</a></td>
+	<td class="summary">make a value callable (local)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#memoize">memoize (func)</a></td>
+	<td class="summary">'memoize' a function (cache returned value for next call).</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="String_utilties"></a>String utilties </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "split"></a>
+    <strong>split (s, re, n)</strong>
+    </dt>
+    <dd>
+    split a delimited string into an array of strings.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+         The input string
+        </li>
+        <li><span class="parameter">re</span>
+         A Lua string pattern; defaults to '%s+'. Patterns with
+    magic `+` at the end do not produce empty pieces.
+        </li>
+        <li><span class="parameter">n</span>
+         optional maximum number of splits, tail returned unsplit
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        an array of strings
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "escape"></a>
+    <strong>escape (s)</strong>
+    </dt>
+    <dd>
+    escape any 'magic' pattern characters in a string.
+ Useful for functions like `string.gsub` and `string.match` which
+ always work with Lua string patterns.
+ For any s, `s:match('^'..escape(s)..'$') == s` is `true`.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+         The input string
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        an escaped string
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "expand"></a>
+    <strong>expand (s, subst)</strong>
+    </dt>
+    <dd>
+    expand a string containing any `${var}` or `$var`.
+ If the former form is found, the latter is not looked for, so
+   pick _either one_ of these forms consistently!
+ Substitution values should be only numbers or strings.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+         the string
+        </li>
+        <li><span class="parameter">subst</span>
+         either a table or a function (as in `string.gsub`)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        expanded string
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "quote"></a>
+    <strong>quote (v, raw)</strong>
+    </dt>
+    <dd>
+    quoted string or raw tostring (local)
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">v</span>
+         a value
+        </li>
+        <li><span class="parameter">raw</span>
+         for non-strings, ignore the object's __tostring metafield
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the quoted string (a result of `tstring` is not requoted)
+ or raw tostring for other values
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "tstring"></a>
+    <strong>tstring (t, how)</strong>
+    </dt>
+    <dd>
+    return a string representation of a Lua value.
+ Cycles are detected, and the appearance of the result can be customized.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         the value to be represented
+        </li>
+        <li><span class="parameter">how</span>
+         (optional) a table or string containing customization info,
+    stays in effect until overridden
+    how.sep: separator appearing after scalar item (default `,`)
+    how.tsep: separator appearing after table-valued item (default `;`)
+    how.wrap: length of lines to aim for
+    how.indent: number of spaces to indent (implies one item to a line)
+    how.raw: override item's own __tostring
+    how.limit: bail out when string length passes `limit`
+    If `how` is a number, it is used as how.indent
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a string
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="File_and_Path_functions"></a>File and Path functions </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "readfile"></a>
+    <strong>readfile (filename, is_bin)</strong>
+    </dt>
+    <dd>
+    return the contents of a file as a string
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">filename</span>
+         The file path
+        </li>
+        <li><span class="parameter">is_bin</span>
+         open in binary mode, default false
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        file contents, or nil,error
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "writefile"></a>
+    <strong>writefile (filename, str, is_bin)</strong>
+    </dt>
+    <dd>
+    write a string to a file,
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">filename</span>
+         The file path
+        </li>
+        <li><span class="parameter">str</span>
+         The string
+        </li>
+        <li><span class="parameter">is_bin</span>
+         open in binary mode, default false
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true or nil,error
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "exists"></a>
+    <strong>exists (filename)</strong>
+    </dt>
+    <dd>
+    Does a file exist?
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">filename</span>
+         a file path
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the file path, otherwise nil
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">file = exists <span class="string">'readme'</span> <span class="keyword">or</span> exists <span class="string">'readme.txt'</span> <span class="keyword">or</span> exists <span class="string">'readme.md'</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "splitpath"></a>
+    <strong>splitpath (P)</strong>
+    </dt>
+    <dd>
+    split a path into directory and file part.
+ if there's no directory part, the first value will be the empty string.
+ Handles both forward and back-slashes on Windows.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">P</span>
+         A file path
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        the directory part</li>
+        <li>
+        the file part</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "splitext"></a>
+    <strong>splitext (P)</strong>
+    </dt>
+    <dd>
+    split a path into root and extension part.
+ if there's no extension part, the second value will be empty
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">P</span>
+         A file path
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        the name part</li>
+        <li>
+        the extension</li>
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Table_utilities"></a>Table utilities </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "new"></a>
+    <strong>new (...)</strong>
+    </dt>
+    <dd>
+    new empty object of same type as argument (local)
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+         values to be examined one by one until a table that has
+ a metatable is found
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        an empty table having the same metatable as the found object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "metafield"></a>
+    <strong>metafield (t, key)</strong>
+    </dt>
+    <dd>
+    metafield of an object (local)
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         a table
+        </li>
+        <li><span class="parameter">key</span>
+         a field name
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        value of that field in the metatable of t, if any
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "collect"></a>
+    <strong>collect (count, ...)</strong>
+    </dt>
+    <dd>
+    collect a series of values from an iterator.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">count</span>
+         (optional) a number, the maximum number of items to collect
+        </li>
+        <li><span class="parameter">...</span>
+         iterator
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        array-like table
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">collect(<span class="global">pairs</span>(t)) -- gives an unsorted version of keys(t)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "range"></a>
+    <strong>range (x1, x2, d)</strong>
+    </dt>
+    <dd>
+    create an array of numbers from start to end.
+ With one argument it goes `1..x1`. `d` may be a
+ floating-point fraction
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x1</span>
+         start value if x2 given, otherwise end value (starting from 1)
+        </li>
+        <li><span class="parameter">x2</span>
+         end value
+        </li>
+        <li><span class="parameter">d</span>
+         increment (default 1)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        array of numbers
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">range(<span class="number">2</span>,<span class="number">10</span>,<span class="number">2</span>) --&gt; {<span class="number">2</span>,<span class="number">4</span>,<span class="number">6</span>,<span class="number">8</span>,<span class="number">10</span>}</pre></li>
+        <li><pre class="example">range(<span class="number">5</span>) --&gt; {<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>}</pre></li>
+    </ul>
+
+</dd>
+</dl>
+    <h2><a name="Object_like_array_functions"></a>Object-like array functions </h2>
+
+ 'array' here is shorthand for 'array-like table'; these functions
+ only operate over the numeric `1..#t` range of a table and are
+ particularly efficient for this purpose. If these functions are
+ added to the __index table of an object, they can be called in an
+ object-oriented way, and the ones that created new tables will
+ replicate the metatable an object given as first parameter.
+
+    <dl class="function">
+    <dt>
+    <a name = "apply"></a>
+    <strong>apply (t, f, ...)</strong>
+    </dt>
+    <dd>
+    apply a function to each element of an array.
+ The output must always be the same length as the input, so
+ any `nil` values are mapped to `false`.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         the array
+        </li>
+        <li><span class="parameter">f</span>
+         a function of one or more arguments
+        </li>
+        <li><span class="parameter">...</span>
+         any extra arguments to the function
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the transformed array
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "ifilter"></a>
+    <strong>ifilter (t, pred, ...)</strong>
+    </dt>
+    <dd>
+    filter an array using a predicate.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         a table
+        </li>
+        <li><span class="parameter">pred</span>
+         a function that must return `nil` or `false`
+ to exclude a value
+        </li>
+        <li><span class="parameter">...</span>
+         any extra arguments to the predicate
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new array such that `pred(t[i])` evaluates as true
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "ifind"></a>
+    <strong>ifind (t, pred, ...)</strong>
+    </dt>
+    <dd>
+    find an item in an array using a predicate.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         the array
+        </li>
+        <li><span class="parameter">pred</span>
+         a function of at least one argument
+        </li>
+        <li><span class="parameter">...</span>
+         any extra arguments
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the item value, or `nil`
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">ifind({{<span class="number">1</span>,<span class="number">2</span>},{<span class="number">4</span>,<span class="number">5</span>}},<span class="string">'X[1]==Y'</span>,<span class="number">4</span>) --&gt; {<span class="number">4</span>,<span class="number">5</span>}</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "indexof"></a>
+    <strong>indexof (t, value, cmp)</strong>
+    </dt>
+    <dd>
+    return the first index of an item in an array.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         the array
+        </li>
+        <li><span class="parameter">value</span>
+         item value
+        </li>
+        <li><span class="parameter">cmp</span>
+         optional comparison function (default is `X==Y`)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        index, otherwise `nil`
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "sub"></a>
+    <strong>sub (t, i1, i2)</strong>
+    </dt>
+    <dd>
+    return a slice of an array.
+ Like `string.sub`, negative indices count from the end.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         the array
+        </li>
+        <li><span class="parameter">i1</span>
+         the start index, default 1
+        </li>
+        <li><span class="parameter">i2</span>
+         the end index, default #t (like `string.sub`)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new array containing `t[i]` in the specified range
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "removerange"></a>
+    <strong>removerange (tbl, start, finish)</strong>
+    </dt>
+    <dd>
+    delete a range of values from an array.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tbl</span>
+         the array
+        </li>
+        <li><span class="parameter">start</span>
+         start index
+        </li>
+        <li><span class="parameter">finish</span>
+         end index (like `ml.sub`)
+ NB Like table.remove, does not return `tbl`
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "insertinto"></a>
+    <strong>insertinto (dest, index, src, overwrite)</strong>
+    </dt>
+    <dd>
+    copy values from `src` into `dest` starting at `index` (local).
+ By default, it moves up elements of `dest` to make room.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">dest</span>
+         destination array
+        </li>
+        <li><span class="parameter">index</span>
+         start index in destination
+        </li>
+        <li><span class="parameter">src</span>
+         source array
+        </li>
+        <li><span class="parameter">overwrite</span>
+         write over values
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "extend"></a>
+    <strong>extend (t, ...)</strong>
+    </dt>
+    <dd>
+    extend an array using values from other tables.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         the array to be extended
+        </li>
+        <li><span class="parameter">...</span>
+         the other arrays
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the extended array
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example"><span class="backtick">`extend({},t)`</span> --&gt; a shallow copy of the array part of t</pre></li>
+        <li><pre class="example"><span class="backtick">`extend(t,u1,u2)`</span> -- replaces t by the <span class="string">"concatenation"</span> of t,u1,u2</pre></li>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "indexby"></a>
+    <strong>indexby (t, keys)</strong>
+    </dt>
+    <dd>
+    make an array of indexed values.
+ Generalized table indexing. Result will only contain
+ values for keys that exist.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         a table
+        </li>
+        <li><span class="parameter">keys</span>
+         an array of keys or indices
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        an array `L` such that `L[keys[i]]`
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">indexby({one=<span class="number">1</span>,two=<span class="number">2</span>},{<span class="string">'one'</span>,<span class="string">'three'</span>}) --&gt; {<span class="number">1</span>}</pre></li>
+        <li><pre class="example">indexby({<span class="number">10</span>,<span class="number">20</span>,<span class="number">30</span>,<span class="number">40</span>},{<span class="number">2</span>,<span class="number">4</span>}) --&gt; {<span class="number">20</span>,<span class="number">40</span>}</pre></li>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "update"></a>
+    <strong>update (t, ...)</strong>
+    </dt>
+    <dd>
+    add the key/value pairs of the other tables to the first table.
+ For sets, this is their union. For the same keys, values found in
+ earlier tables are overwritten.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         table to be updated
+        </li>
+        <li><span class="parameter">...</span>
+         tables containg more pairs to be added
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the updated table
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">update({},tbl) --&gt; a shallow copy of t</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "makemap"></a>
+    <strong>makemap (t, tv)</strong>
+    </dt>
+    <dd>
+    make a table from an array of keys and an array of values.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         an array of keys
+        </li>
+        <li><span class="parameter">tv</span>
+         an array of values
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a table where `{[t[i]]=tv[i]}`
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">makemap({<span class="string">'power'</span>,<span class="string">'glory'</span>},{<span class="number">20</span>,<span class="number">30</span>}) --&gt; {power=<span class="number">20</span>,glory=<span class="number">30</span>}</pre>
+    </ul>
+
+</dd>
+</dl>
+    <h2><a name="Set_functions"></a>Set functions </h2>
+
+ A set consists of the keys of table, no matter what the values are.
+
+    <dl class="function">
+    <dt>
+    <a name = "bag"></a>
+    <strong>bag (t)</strong>
+    </dt>
+    <dd>
+    make a bag (multiset) from a table; can be used as a set
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         a table
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a table of the number of times each key appears as a value in t
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">bag{<span class="number">3</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">5</span>,<span class="number">7</span>,<span class="number">3</span>,<span class="number">5</span>} --&gt; {[<span class="number">7</span>]=<span class="number">1</span>,[<span class="number">5</span>]=<span class="number">3</span>,[<span class="number">3</span>]=<span class="number">2</span>,[<span class="number">6</span>]=<span class="number">1</span>}</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "invert"></a>
+    <strong>invert (t)</strong>
+    </dt>
+    <dd>
+    Invert keys and values in a table.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         a table
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a table where keys and values swap places
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">invert{<span class="string">'one'</span>,<span class="string">'two'</span>} --&gt; {one=<span class="number">1</span>,two=<span class="number">2</span>}</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "keys"></a>
+    <strong>keys (t)</strong>
+    </dt>
+    <dd>
+    extract the keys of a table as an array.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         a table
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        an array of keys (sorted)
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "contains"></a>
+    <strong>contains (t, other)</strong>
+    </dt>
+    <dd>
+    are all the keys of `other` in `t`?
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         a set (i.e. a table whose keys are the set elements)
+        </li>
+        <li><span class="parameter">other</span>
+         a possible subset
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">bool</span></span>
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "count"></a>
+    <strong>count (t)</strong>
+    </dt>
+    <dd>
+    return the number of keys in this table, i.e.  the cardinality of this set.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         a table
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">int</span></span>
+        key count
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "equalkeys"></a>
+    <strong>equalkeys (t, other)</strong>
+    </dt>
+    <dd>
+    set equality: do these tables have the same keys?
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         a table
+        </li>
+        <li><span class="parameter">other</span>
+         a table
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true or false
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Functional_helpers"></a>Functional helpers </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "throw"></a>
+    <strong>throw (f)</strong>
+    </dt>
+    <dd>
+    create a function which will throw an error on failure.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">f</span>
+         a function that returns nil,err if it fails
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        an equivalent function that raises an error
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">openfile=throw(<span class="global">io</span>.open); myfile=openfile<span class="string">'junk.txt'</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "bind"></a>
+    <strong>bind (f, ...)</strong>
+    </dt>
+    <dd>
+    bind values to the arguments of function `f`.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">f</span>
+         a function of at least one argument
+        </li>
+        <li><span class="parameter">...</span>
+         values to bind (nil leaves an argument free)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a function of fewer arguments (by the number of bound values)
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">interior = bind(<span class="global">string</span>.sub,<span class="keyword">nil</span>,<span class="number">2</span>,-<span class="number">2</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "compose"></a>
+    <strong>compose (f1, f2)</strong>
+    </dt>
+    <dd>
+    compose two functions.
+ For instance, `printf` can be defined as `compose(io.write,string.format)`
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">f1</span>
+         a function
+        </li>
+        <li><span class="parameter">f2</span>
+         a function
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        `f1(f2(...))`
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "callable"></a>
+    <strong>callable (obj)</strong>
+    </dt>
+    <dd>
+    is the object either a function or a callable object?.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">obj</span>
+         Object to check.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true if callable
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "function_arg"></a>
+    <strong>function_arg (f)</strong>
+    </dt>
+    <dd>
+    make a value callable (local)
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">f</span>
+         a callable or a string lambda.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a function
+    </ol>
+
+    <h3>Raises:</h3>
+    error if `f` is not callable in any way, or errors in string lambda.
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">function_arg(<span class="string">'X+Y'</span>)(<span class="number">1</span>,<span class="number">2</span>) --&gt; <span class="number">3</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "memoize"></a>
+    <strong>memoize (func)</strong>
+    </dt>
+    <dd>
+    'memoize' a function (cache returned value for next call).
+ This is useful if you have a function which is relatively expensive,
+ but you don't know in advance what values will be required, so
+ building a table upfront is wasteful/impossible.
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">func</span>
+         a function of at least one argument
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a function with at least one argument, which is used as the key.
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.0</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

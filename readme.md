@@ -24,12 +24,9 @@ The routines included can be classified broadly as follows:
 7. Functions: `bind compose memoize throw`
 
 Detailed documentation is available in the `doc` directory (made by running 
-
-    ldoc -t "Microlight" -p "Microlight" ml.lua
-
-The program `ml-demosuite.lua`, which has been designed to take
-advantage of interactive help (`require"help"`) when available, produces
-the output `ml-demosuite.txt`.
+`ldoc .` in the module diectory). The program `ml-demosuite.lua`, which has 
+been designed to take advantage of interactive help (`require"help"`) when 
+available, produces the output `ml-demosuite.txt`.
 
 Getting started
 ---------------
