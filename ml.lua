@@ -1,18 +1,30 @@
 -----------------
 -- Microlight - a very compact Lua utilities module
 --
+-- Some local functions used in the Microlight code also show up in the
+-- HTML documentation made by LDoc. You can use them from Microlight by 
+-- `require"ml-extra"` either instead or after requiring `ml`.
+--
+-- Caveat: this has been designed with Lua 5.2 in mind.  The present
+--    version works on Lua 5.1 too but backwards compatibility must 
+--    not be taken for granted in future versions.
+--
 -- Steve Donovan, 2012; Dirk Laurie, 2013; License MIT
 -- @module ml
 
 local lua51 = _VERSION:match '5%.1$'
-local ml = {ML_VERSION='1.1-1+experimental'}
+local ml = {ML_VERSION='1.2-rc1'}
 local rawget,select,pairs,tostring = 
       rawget,select,pairs,tostring
 local S,T = string, table
 local find, sub, match = S.find, S.sub, S.match
-local append,  pack,  unpack,  concat,  sort = 
-    T.insert,T.pack,T.unpack,T.concat,T.sort
-local function_arg
+local append,  pack,  unpack,            concat,  sort,  remove = 
+    T.insert,T.pack,unpack or T.unpack,T.concat,T.sort,T.remove
+local function_arg, metafield
+
+pack = pack or function(...)
+   return {n=select('#',...),...}
+end
 
 ---------------------------------------------------
 -- String utilties.
@@ -73,6 +85,149 @@ function ml.expand (s,subst)
     return (res:gsub('%$([%w_]+)',subst))
 end
 
+--- quoted string or raw tostring (local)
+-- @param v a value  
+-- @param raw for non-strings, ignore the object's __tostring metafield
+-- @return the quoted string (a result of `tstring` is not requoted) 
+-- or raw tostring for other values
+local function quote (v,raw)
+    if type(v) == 'string' and not (v:match'^"' and v:match'"$') 
+        and not (v:match'^{' and v:match'}$') then        
+        return ('%q'):format(v)
+    else
+        local tostr=metafield(v,__tostring)
+        if tostr and raw then getmetatable(v).__tostring=nil end
+        local q = tostring(v)
+        if tostr and raw then getmetatable(v).__tostring=tostr end
+        return q
+    end
+end
+
+local lua_keyword = {
+    ["and"] = true, ["break"] = true,  ["do"] = true,
+    ["else"] = true, ["elseif"] = true, ["end"] = true,
+    ["false"] = true, ["for"] = true, ["function"] = true,
+    ["if"] = true, ["in"] = true,  ["local"] = true, ["nil"] = true,
+    ["not"] = true, ["or"] = true, ["repeat"] = true,
+    ["return"] = true, ["then"] = true, ["true"] = true,
+    ["until"] = true,  ["while"] = true, ["goto"] = true,
+}
+
+local function is_iden (key)
+    return key:match '^[%a_][%w_]*$' and not lua_keyword[key]
+end
+
+local function istable (t) 
+   if type(t)=="table" then return 1 else return 0 end 
+end
+
+local tbuff
+function tbuff (t,level,buff,how)
+    local indent,     sep,            tsep,            wrap,     raw = 
+      how.indent, how.sep or ',', how.tsep or ';', how.wrap, how.raw
+    local maxlen = how.len or math.huge
+    if buff.len>maxlen then return end
+
+    local function append (...)
+        if indent then
+            local lead=select(1,...)
+            if lead=='{' then if level>0 then
+               buff[#buff+1] = '\n'..(' '):rep(indent*level)
+               end
+            elseif lead=='}' then
+            elseif lead==tsep then
+            else
+               if buff[#buff] == '{' then
+                  buff[#buff+1] = (' '):rep(indent-1)  
+               else  
+                  buff[#buff+1] = '\n'..(' '):rep(indent*(level+1))
+               end
+            end
+        end
+        for k=1,select('#',...) do
+            local v=select(k,...)
+            if not v or buff.len>maxlen then return end
+            buff.len = buff.len+#v
+            if buff.len>maxlen then v="!! too long !!" end
+            buff[#buff+1] = v
+            buff.linelen = buff.linelen+#v
+        end
+        if wrap and buff.linelen>=wrap then 
+            buff[#buff+1]='\n'; buff.linelen=0 
+        end
+    end
+
+    local function removetrailer()
+        if buff[#buff]==sep or buff[#buff]==tsep then buff[#buff]=nil
+        elseif buff[#buff]:match"^\n" and
+            buff[#buff-1]==sep or buff[#buff-1]==tsep then 
+            remove(buff,#buff-1)
+        end
+    end
+
+    if type(t)~='table' then append(quote(t,raw),sep) return end
+    local tables = buff.tables
+    if tables[t] then append("<cycle "..quote(t).." >",sep); return end    
+    tables[t]=true
+    append('{')
+
+    local old=#buff
+    local done={}
+    -- array part -------
+    for k=1,#t do
+        if not t[k] then break end
+        tbuff(t[k],level+istable(t[k]),buff,how)
+        done[k]=true
+    end
+    -- 'map' part ------
+    for key,value in pairs(t) do if not done[key] then
+        if type(key)~='string' or not is_iden(key) then
+            if type(key)=='table' then
+                key = ml.tstring(key,how)
+            else
+                key = quote(key,how.raw)
+            end
+            key = "["..key.."]"
+        end
+        append(key..'=')
+        tbuff(value,level+istable(t[k]),buff,how)
+     end end
+     removetrailer()
+     append"}"
+     if level>0 then append(tsep) end
+end   
+    
+local default_how={}
+--- return a string representation of a Lua value.
+-- Cycles are detected, and the appearance of the result can be customized.
+-- @param t the value to be represented
+-- @param how (optional) a table or string containing customization info,
+--    stays in effect until overridden
+--    how.sep: separator appearing after scalar item (default `,`)
+--    how.tsep: separator appearing after table-valued item (default `;`)  
+--    how.wrap: length of lines to aim for
+--    how.indent: number of spaces to indent (implies one item to a line)      
+--    how.raw: override item's own __tostring
+--    how.limit: bail out when string length passes `limit`
+--    If `how` is a number, it is used as how.indent
+-- @return a string
+function ml.tstring (t,how)
+    if type(how) == 'number' then how = {indent = how} end
+    if how then default_how=ml.update({},how) else how=default_how end
+    if type(t) == 'table' then
+        local buff = {tables={},len=0,linelen=0}
+        tbuff(t,0,buff,how)
+        return concat(buff)     
+    else
+        return quote(t,how.raw)
+    end
+end
+
+---------------------------------------------------
+-- File and Path functions
+-- @section file
+---------------------------------------------------
+
 --- return the contents of a file as a string
 -- @param filename The file path
 -- @param is_bin open in binary mode, default false
@@ -99,11 +254,6 @@ function ml.writefile(filename,str,is_bin)
     f:close()
     return true
 end
-
----------------------------------------------------
--- File and Path functions
--- @section file
----------------------------------------------------
 
 --- Does a file exist?
 -- @param filename a file path
@@ -164,204 +314,102 @@ function ml.splitext(P)
 end
 
 ---------------------------------------------------
--- Extended table functions.
--- 'array' here is shorthand for 'array-like table'; these functions
--- only operate over the numeric `1..#t` range of a table and are
--- particularly efficient for this purpose.
+-- Table utilities.
+--
 -- @section table
 ---------------------------------------------------
 
-local function quote (v)
-    if type(v) == 'string' then
-        return ('%q'):format(v)
-    else
-        return tostring(v)
-    end
-end
-
-local lua_keyword = {
-    ["and"] = true, ["break"] = true,  ["do"] = true,
-    ["else"] = true, ["elseif"] = true, ["end"] = true,
-    ["false"] = true, ["for"] = true, ["function"] = true,
-    ["if"] = true, ["in"] = true,  ["local"] = true, ["nil"] = true,
-    ["not"] = true, ["or"] = true, ["repeat"] = true,
-    ["return"] = true, ["then"] = true, ["true"] = true,
-    ["until"] = true,  ["while"] = true, ["goto"] = true,
-}
-
-local function is_iden (key)
-    return key:match '^[%a_][%w_]*$' and not lua_keyword[key]
-end
-
-
-local tbuff
-function tbuff (t,level,buff,indent,sep,tsep,wrap)
-    local indentation = (indent or ''):rep(level)
-    local tables = buff.tables
-    local len=0
-    local function append (v,wrap)
-        if not v then return end
-        buff[#buff+1] = v
-        len = len+#v
-        if wrap and len>=wrap then 
-            buff[#buff+1]='\n'; len=0 
-        end
-    end
-    local function put_item(value)
-        if type(value) == 'table' then
-            if not tables[value] then
-                tables[value] = true
-                tbuff(value,level+1,buff,indent,sep,tsep)
-            else
-                append("<cycle>")
-            end
-            append(tsep,wrap)
-        else
-            value = quote(value)
-            append(value)
-            append(sep,wrap)
-        end
-        if indent then append ('\n'..indent) end
-    end
-    append "{"
-    if indent then append ('\n'..indent) end
-    -- array part -------
-    local array = {}
-    for i,value in ipairs(t) do
-        append(indentation)
-        put_item(value)
-        array[i] = true
-    end
-    -- 'map' part ------
-    for key,value in pairs(t) do if not array[key] then
-        append(indent)
-        -- non-identifiers need ["key"]
-        if type(key)~='string' or not is_iden(key) then
-            if type(key)=='table' then
-                key = ml.tstring(key,false)
-            else
-                key = quote(key)
-            end
-            key = "["..key.."]"
-        end
-        append(key..'=')
-        put_item(value)
-    end end
-    -- remove trailing separator if any unless `indent` supplied
-    while buff[#buff]==sep or buff[#buff]==tsep do buff[#buff]=nil end
-    if indent then append(indent) end
-    append "}"
-end
-
---- return a new empty object of the same type as the first object-valued 
--- argument
+--- new empty object of same type as argument (local)
+-- @param ... values to be examined one by one until a table that has
+-- a metatable is found
+-- @return an empty table having the same metatable as the found object
 local new = function(...)
-    local t
+    local mt
     for k=1,select('#',...) do 
-        t = getmetatable(select(k,...))
-        if t then break end
+        local t=select(k,...)
+        if type(t)=='table' then mt = getmetatable(t) end
+        if mt then break end
     end
-    return setmetatable({},t)
+    return setmetatable({},mt)
 end
 
---- return specified metafield, if any
-local metafield = function(t,field)
+--- metafield of an object (local)
+-- @param t a table
+-- @param key a field name
+-- @return value of that field in the metatable of t, if any
+metafield = function(t,key)
     local mt = getmetatable(t)
-    return mt and mt[field]
-end
-
-local default_how={}
---- return a string representation of a Lua value.
--- Cycles are detected, and the appearance of the result can be customized.
--- @param t the value to be represented
--- @param how (optional) a table or string containing customization info,
---    ignored unless t is a table; stays in effect until overridden
---    how.sep: separator appearing after scalar item
---    how.tsep: separator appearing after table-valued item
---    how.wrap: length of lines to aim for
---    how.indent: indentation string (implies one item to a line)
---    If `how` is a string, it is used as indentation string.
--- @return a string
-function ml.tstring (t,how)
-    local tostring = metafield(t,__tostring)
-    if tostring then return tostring(t) end
-    if type(t) == 'table' then
-        local buff = {tables={[t]=true}}
-        if type(how) == 'string' then how = {indent = how} end
-        if how then default_how=how else how=default_how end
-        pcall(tbuff,t,0,buff,how.indent,how.sep or ',',how.tsep or ';',how.wrap)
-        return concat(buff)
-    else
-        return quote(t)
-    end
+    return mt and mt[key]
 end
 
 --- collect a series of values from an iterator.
+-- @param count (optional) a number, the maximum number of items to collect
 -- @param ... iterator
 -- @return array-like table
--- @usage collect(pairs(t)) gives an unsorted version of keylist(t)
-function ml.collect (...)
+-- @usage collect(pairs(t)) -- gives an unsorted version of keys(t)
+function ml.collect (count,...)
     local res = {}
-    for k in ... do append(res,k) end
+    if type(count)=='number' then
+        local n=0
+        for k in ... do 
+            if n>=count then break end
+            append(res,k)
+            n = n+1 
+        end
+    else for k in count,... do append(res,k) end
+    end
     return res
 end
 
---- extend a table by mapping a function over another table.
--- @param dest destination table
--- @param j start index in destination
--- @param nilv default value to use if function returns `nil`
--- @param f the function
--- @param t source table
--- @param ... extra arguments to function
-local function mapextend (dest,j,nilv,f,t,...)
-    f = function_arg(f)
-    if j == -1 then j = #dest + 1 end
-    for i = 1,#t do
-        local val = f(t[i],...)
-        val = val~=nil and val or nilv
-        if val ~= nil then
-            dest[j] = val
-            j = j + 1
-        end
+--- create an array of numbers from start to end.
+-- With one argument it goes `1..x1`. `d` may be a
+-- floating-point fraction
+-- @param x1 start value if x2 given, otherwise end value (starting from 1)
+-- @param x2 end value
+-- @param d increment (default 1)
+-- @return array of numbers
+-- @usage range(2,10,2) --> {2,4,6,8,10}
+-- @usage range(5) --> {1,2,3,4,5}
+function ml.range (x1,x2,d)
+    if not x2 then
+        x2 = x1
+        x1 = 1
     end
-    return dest
+    d = d or 1
+    local res,k = {},1
+    for x = x1,x2,d do
+        res[k] = x
+        k = k + 1
+    end
+    return res
 end
 
---- map a function over an array.
--- The output must always be the same length as the input, so
--- any `nil` values are mapped to `false`.
--- @param f a function of one or more arguments
--- @param t the array
--- @param ... any extra arguments to the function
--- @return a new array with elements `f(t[i],...)`
-function ml.imap(f,t,...)
-    return mapextend(new(t),1,false,f,t,...)
-end
+---------------------------------------------------
+-- Object-like array functions.
+-- 'array' here is shorthand for 'array-like table'; these functions
+-- only operate over the numeric `1..#t` range of a table and are
+-- particularly efficient for this purpose. If these functions are
+-- added to the __index table of an object, they can be called in an
+-- object-oriented way, and the ones that created new tables will
+-- replicate the metatable an object given as first parameter.
+--
+-- @section array
+---------------------------------------------------
 
 --- apply a function to each element of an array.
+-- The output must always be the same length as the input, so
+-- any `nil` values are mapped to `false`.
 -- @param t the array
 -- @param f a function of one or more arguments
 -- @param ... any extra arguments to the function
 -- @return the transformed array
 function ml.apply (t,f,...)
-    return mapextend(t,1,false,f,t,...)
-end
-
---- map a function over values from two arrays.
--- Length of output is the size of the smallest array.
--- @param f a function of two or more arguments
--- @param t1 first array
--- @param t2 second array
--- @param ... any extra arguments to the function
--- @return a new array with elements `f(t1[i],t2[i],...)`
-function ml.imap2(f,t1,t2,...)
-    f = function_arg(f)
-    local res = new(t1,t2)
-    local n = math.min(#t1,#t2)
-    for i = 1,n do
-        res[i] = f(t1[i],t2[i],...) or false
-    end
-    return res
+   for i=1,#t do 
+      if t[i] then t[i]=f(t[i],...) or false 
+      else t[i]=false
+      end
+   end 
+   return t
 end
 
 --- filter an array using a predicate.
@@ -387,7 +435,7 @@ end
 -- @param pred a function of at least one argument
 -- @param ... any extra arguments
 -- @return the item value, or `nil`
--- @usage ifind({{1,2},{4,5}},'X[1]==Y',4) is {4,5}
+-- @usage ifind({{1,2},{4,5}},'X[1]==Y',4) --> {4,5}
 function ml.ifind(t,pred,...)
     pred = function_arg(pred)
     for i = 1,#t do
@@ -412,16 +460,6 @@ function ml.indexof (t,value,cmp)
     end
 end
 
-local function upper (t,i2)
-    if not i2 or i2 > #t then
-        return #t
-    elseif i2 < 0 then
-        return #t + i2 + 1
-    else
-        return i2
-    end
-end
-
 local function copy_range (dest,index,src,i1,i2)
     local k = index
     for i = i1,i2 do
@@ -432,14 +470,26 @@ local function copy_range (dest,index,src,i1,i2)
 end
 
 --- return a slice of an array.
--- Like `string.sub`, the end index may be negative.
+-- Like `string.sub`, negative indices count from the end.
 -- @param t the array
 -- @param i1 the start index, default 1
 -- @param i2 the end index, default #t (like `string.sub`)
 -- @return a new array containing `t[i]` in the specified range
 function ml.sub(t,i1,i2)
-    i1, i2 = i1 or 1, upper(t,i2)
+    i1, i2 = i1 or 1, i2 or #t
+    if i1<0 then i1=#t+i1+1 end
+    if i2<0 then i2=#t+i2+1 end
     return copy_range(new(t),1,t,i1,i2)
+end
+
+local function upper (t,i2)
+    if not i2 or i2 > #t then
+        return #t
+    elseif i2 < 0 then
+        return #t + i2 + 1
+    else
+        return i2
+    end
 end
 
 --- delete a range of values from an array.
@@ -454,7 +504,7 @@ function ml.removerange(tbl,start,finish)
     for k=#tbl,#tbl-count+1,-1 do tbl[k]=nil end
 end
 
---- copy values from `src` into `dest` starting at `index`.
+--- copy values from `src` into `dest` starting at `index` (local).
 -- By default, it moves up elements of `dest` to make room.
 -- @param dest destination array
 -- @param index start index in destination
@@ -469,10 +519,11 @@ local function insertinto(dest,index,src,overwrite)
 end
 
 --- extend an array using values from other tables.
--- @{readme.md.Extracting_and_Mapping}
 -- @param t the array to be extended
 -- @param ... the other arrays
 -- @return the extended array
+-- @usage `extend({},t)` --> a shallow copy of the array part of t
+-- @usage `extend(t,u1,u2)` -- replaces t by the "concatenation" of t,u1,u2
 function ml.extend(t,...)
     for i = 1,select('#',...) do
         insertinto(t,#t+1,select(i,...),true)
@@ -486,8 +537,8 @@ end
 -- @param t a table
 -- @param keys an array of keys or indices
 -- @return an array `L` such that `L[keys[i]]`
--- @usage indexby({one=1,two=2},{'one','three'}) is {1}
--- @usage indexby({10,20,30,40},{2,4}) is {20,40}
+-- @usage indexby({one=1,two=2},{'one','three'}) --> {1}
+-- @usage indexby({10,20,30,40},{2,4}) --> {20,40}
 function ml.indexby(t,keys)
     local res = new(t)
     for _,v in pairs(keys) do
@@ -498,31 +549,8 @@ function ml.indexby(t,keys)
     return res
 end
 
---- create an array of numbers from start to end.
--- With one argument it goes `1..x1`. `d` may be a
--- floating-point fraction
--- @param x1 start value
--- @param x2 end value
--- @param d increment (default 1)
--- @return array of numbers
--- @usage range(2,10) is {2,3,4,5,6,7,8,9,10}
--- @usage range(5) is {1,2,3,4,5}
-function ml.range (x1,x2,d)
-    if not x2 then
-        x2 = x1
-        x1 = 1
-    end
-    d = d or 1
-    local res,k = {},1
-    for x = x1,x2,d do
-        res[k] = x
-        k = k + 1
-    end
-    return res
-end
-
 -- Bring modules or tables into 't`.
--- If `lib` is a string, then it becomes the result of `require`
+-- If `lib` is a string, then it becomes the result of `require(lib)`
 -- With only one argument, the second argument is assumed to be
 -- the `ml` table itself.
 -- @param t table to be updated, or current environment
@@ -555,12 +583,13 @@ function ml.import(t,...)
     return ml.update(t,unpack(libs))
 end
 
---- add the key/value pairs of arrays to the first array.
--- For sets, this is their union. For the same keys,
--- the values from the first table will be overwritten.
+--- add the key/value pairs of the other tables to the first table.
+-- For sets, this is their union. For the same keys, values found in
+-- earlier tables are overwritten.
 -- @param t table to be updated
 -- @param ... tables containg more pairs to be added
 -- @return the updated table
+-- @usage update({},tbl) --> a shallow copy of t
 function ml.update (t,...)
     for i = 1,select('#',...) do
         for k,v in pairs(select(i,...)) do
@@ -574,7 +603,7 @@ end
 -- @param t an array of keys
 -- @param tv an array of values
 -- @return a table where `{[t[i]]=tv[i]}`
--- @usage makemap({'power','glory'},{20,30}) is {power=20,glory=30}
+-- @usage makemap({'power','glory'},{20,30}) --> {power=20,glory=30}
 function ml.makemap(t,tv)
     local res = {}
     for i = 1,#t do
@@ -583,10 +612,17 @@ function ml.makemap(t,tv)
     return res
 end
 
+---------------------------------------------------
+-- Set functions.
+-- A set consists of the keys of table, no matter what the values are.
+--
+-- @section set
+---------------------------------------------------
+
 --- make a bag (multiset) from a table; can be used as a set
 -- @param t a table
 -- @return a table of the number of times each key appears as a value in t
--- @usage bag{3,5,6,5,7,3,5} is {[7]=1,[5]=3,[3]=2,[6]=1}
+-- @usage bag{3,5,6,5,7,3,5} --> {[7]=1,[5]=3,[3]=2,[6]=1}
 function ml.bag(t)
     local res=new(t)
     for k,v in pairs(t) do res[v]=(res[v] or 0)+1 end
@@ -596,7 +632,7 @@ end
 --- Invert keys and values in a table.
 -- @param t a table
 -- @return a table where keys and values swap places
--- @usage invert{'one','two'} is {one=1,two=2}
+-- @usage invert{'one','two'} --> {one=1,two=2}
 function ml.invert(t)
     local res=new(t)
     for k,v in pairs(t) do res[v]=k end
@@ -606,7 +642,7 @@ end
 --- extract the keys of a table as an array.
 -- @param t a table
 -- @return an array of keys (sorted)
-function ml.keylist(t)
+function ml.keys(t)
     local keys = ml.collect(pairs(t))
     sort(keys)
     return keys
@@ -616,14 +652,14 @@ end
 -- @param t a set (i.e. a table whose keys are the set elements)
 -- @param other a possible subset
 -- @treturn bool
-function ml.issubset(t,other)
+function ml.contains(t,other)
     for k,v in pairs(other) do
         if t[k] == nil then return false end
     end
     return true
 end
 
---- return the number of keys in this table, or members in this set.
+--- return the number of keys in this table, i.e. the cardinality of this set.
 -- @param t a table
 -- @treturn int key count
 function ml.count (t)
@@ -637,7 +673,7 @@ end
 -- @param other a table
 -- @return true or false
 function ml.equalkeys(t,other)
-    return ml.issubset(t,other) and ml.issubset(other,t)
+    return ml.contains(t,other) and ml.contains(other,t)
 end
 
 ---------------------------------------------------
@@ -708,18 +744,11 @@ end
 
 local string_lambda
 
---- defines how we convert something to a callable.
---
--- Currently, anything that matches @{callable} or is a _string lambda_.
--- These are expressions with any of the placeholders, `X`,`Y` or `Z`
--- corresponding to the first, second or third argument to the function.
---
--- This can be overriden by people
--- wishing to extend the idea of 'callable' in this library.
+--- make a value callable (local)
 -- @param f a callable or a string lambda.
 -- @return a function
 -- @raise error if `f` is not callable in any way, or errors in string lambda.
--- @usage function_arg('X+Y')(1,2) == 3
+-- @usage function_arg('X+Y')(1,2) --> 3
 function_arg = function(f)
     if type(f) == 'string' then
         if not string_lambda then
@@ -731,6 +760,11 @@ function_arg = function(f)
     end
     return f
 end
+-- The first step for Microlight routines that need a function f is
+-- `f = function_arg(f)`. The default version of `function_arg` accepts
+-- anything that matches @{callable} or is a _string lambda_.
+-- Anyone wishing to extend the idea of 'callable' in this library
+-- can replace `callable` in the module table at runtime.
 
 --- 'memoize' a function (cache returned value for next call).
 -- This is useful if you have a function which is relatively expensive,
@@ -749,12 +783,17 @@ function ml.memoize(func)
     })
 end
 
---- make the module table callable; returns its first argument after
--- (if a table) setting its __index metafield to the module table
+--- make the module table callable; `ml(t)` sets `ml` as a place to
+-- look for methods when `t` is used in object-oriented calls.
+-- This is an semi-undocumented feature: i.e. `readme.md`, 
+-- `ml-demosuite.lua` and `ldoc ml.lua` do not mention it.
 setmetatable(ml,{__call=
   function(ml,tbl) 
     if type(tbl)=='table' then setmetatable(tbl,{__index=ml}) end
     return tbl 
   end })
+
+debug.getregistry().microlight_extra = {new=new, metafield=metafield, 
+   insertinto=insertinto, function_arg=function_arg, quote=quote}
 
 return ml

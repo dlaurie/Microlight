@@ -1,4 +1,4 @@
-Demo of Microlight 1.1-1+experimental under Lua 5.2
+Demo of Microlight 1.2-rc1 under Lua 5.2
 
 In the documentation, Boolean constants are written `true` and `false`.
 Without the backquotes, the words refer to Lua truth values, i.e. false
@@ -20,16 +20,16 @@ Microlight information utilities
 = callable(near)
 true
 = callable(ml)
-function: 0x9af0280
+function: 0x8ed8b70
 = callable(_G)
 nil
 
 ----- count -----
---- return the number of keys in this table, or members in this set.
+--- return the number of keys in this table, i.e. the cardinality of this set.
 -- @param t a table
 -- @treturn int key count
 = count(ml)
-36
+34
 
 ----- indexof -----
 --- return the first index of an item in an array.
@@ -45,17 +45,19 @@ nil
 -- Cycles are detected, and the appearance of the result can be customized.
 -- @param t the value to be represented
 -- @param how (optional) a table or string containing customization info,
---    ignored unless t is a table; stays in effect until overridden
---    how.sep: separator appearing after scalar item
---    how.tsep: separator appearing after table-valued item
+--    stays in effect until overridden
+--    how.sep: separator appearing after scalar item (default `,`)
+--    how.tsep: separator appearing after table-valued item (default `;`)  
 --    how.wrap: length of lines to aim for
---    how.indent: indentation string (implies one item to a line)
---    If `how` is a string, it is used as indentation string.
+--    how.indent: number of spaces to indent (implies one item to a line)      
+--    how.raw: override item's own __tostring
+--    how.limit: bail out when string length passes `limit`
+--    If `how` is a number, it is used as how.indent
 -- @return a string
 = tstring({{1,2},{3,4}},{sep="; ",tsep=",  "})
-"{{1; 2},  {3; 4}}"
-= tstring({{1,2},{3,4}},{})
-"{{1,2};{3,4}}"
+{{1; 2},  {3; 4}}
+= tstring({{1,2},{3,4}},{wrap=72})
+{{1,2};{3,4}}
 
 Microlight string utilities. The first parameter is a string.
 
@@ -108,7 +110,7 @@ Microlight file utilities. The first parameter is a filename.
 -- @param is_bin open in binary mode, default false
 -- @return file contents, or nil,error
 > writefile("tmp.txt",tstring{1,2,3}); return readfile"tmp.txt"
-"{1,2,3}"
+{1,2,3}
 
 ----- splitext -----
 --- split a path into root and extension part.
@@ -136,12 +138,14 @@ Microlight file utilities. The first parameter is a filename.
 -- @param is_bin open in binary mode, default false
 -- @return true or nil,error
 > writefile("tmp.txt",tstring{1,2,3}); return readfile"tmp.txt"
-"{1,2,3}"
+{1,2,3}
 
 Microlight mutating table utilities. The first parameter is a table.
 
 ----- apply -----
 --- apply a function to each element of an array.
+-- The output must always be the same length as the input, so
+-- any `nil` values are mapped to `false`.
 -- @param t the array
 -- @param f a function of one or more arguments
 -- @param ... any extra arguments to the function
@@ -151,16 +155,17 @@ Microlight mutating table utilities. The first parameter is a table.
 
 ----- extend -----
 --- extend an array using values from other tables.
--- @{readme.md.Extracting_and_Mapping}
 -- @param t the array to be extended
 -- @param ... the other arrays
 -- @return the extended array
+-- @usage `extend({},t)` --> a shallow copy of the array part of t
+-- @usage `extend(t,u1,u2)` -- replaces t by the "concatenation" of t,u1,u2
 = extend({1,2,3},{4,5,6})
 {1,2,3,4,5,6}
 
 ----- import -----
 -- Bring modules or tables into 't`.
--- If `lib` is a string, then it becomes the result of `require`
+-- If `lib` is a string, then it becomes the result of `require(lib)`
 -- With only one argument, the second argument is assumed to be
 -- the `ml` table itself.
 -- @param t table to be updated, or current environment
@@ -179,22 +184,24 @@ Microlight mutating table utilities. The first parameter is a table.
 {1,6}
 
 ----- update -----
---- add the key/value pairs of arrays to the first array.
--- For sets, this is their union. For the same keys,
--- the values from the first table will be overwritten.
+--- add the key/value pairs of the other tables to the first table.
+-- For sets, this is their union. For the same keys, values found in
+-- earlier tables are overwritten.
 -- @param t table to be updated
 -- @param ... tables containg more pairs to be added
 -- @return the updated table
+-- @usage update({},tbl) --> a shallow copy of t
 = update({A=1,B=2},{Z=26})
-{B=2,A=1,Z=26}
+{Z=26,B=2,A=1}
 
 Microlight table-creating utilities. The return value is a table.
 
 ----- collect -----
 --- collect a series of values from an iterator.
+-- @param count (optional) a number, the maximum number of items to collect
 -- @param ... iterator
 -- @return array-like table
--- @usage collect(pairs(t)) gives an unsorted version of keylist(t)
+-- @usage collect(pairs(t)) -- gives an unsorted version of keys(t)
 = collect(("26 Nov 2013"):gmatch"%d+")
 {"26","2013"}
 
@@ -214,7 +221,7 @@ Microlight table-creating utilities. The return value is a table.
 -- @param pred a function of at least one argument
 -- @param ... any extra arguments
 -- @return the item value, or `nil`
--- @usage ifind({{1,2},{4,5}},'X[1]==Y',4) is {4,5}
+-- @usage ifind({{1,2},{4,5}},'X[1]==Y',4) --> {4,5}
 = ifind({{1,2},{4,5}},'X[1]==Y',4)
 {4,5}
 
@@ -225,8 +232,8 @@ Microlight table-creating utilities. The return value is a table.
 -- @param t a table
 -- @param keys an array of keys or indices
 -- @return an array `L` such that `L[keys[i]]`
--- @usage indexby({one=1,two=2},{'one','three'}) is {1}
--- @usage indexby({10,20,30,40},{2,4}) is {20,40}
+-- @usage indexby({one=1,two=2},{'one','three'}) --> {1}
+-- @usage indexby({10,20,30,40},{2,4}) --> {20,40}
 = indexby({one=1,two=2},{'one','three'})
 {1}
 = indexby({10,20,30,40},{2,4})
@@ -236,23 +243,27 @@ Microlight table-creating utilities. The return value is a table.
 --- Invert keys and values in a table.
 -- @param t a table
 -- @return a table where keys and values swap places
--- @usage invert{'one','two'} is {one=1,two=2}
+-- @usage invert{'one','two'} --> {one=1,two=2}
 = invert{A='a',B='b'}
-{a="A",b="B"}
+{b="B",a="A"}
 
------ keylist -----
+----- keys -----
 --- extract the keys of a table as an array.
 -- @param t a table
 -- @return an array of keys (sorted)
-= keylist(ml)
-{"ML_VERSION","apply","bag","bind","callable","collect","compose","count","equalkeys","escape","exists","expand","extend","ifilter","ifind","imap","imap2","import","indexby","indexof","invert","issubset","keylist","makemap","memoize","range","readfile","removerange","split","splitext","splitpath","sub","throw","tstring","update","writefile"}
+= keys(ml)
+{"ML_VERSION","apply","bag","bind","callable","collect","compose","contains",
+"count","equalkeys","escape","exists","expand","extend","ifilter","ifind",
+"import","indexby","indexof","invert","keys","makemap","memoize","range",
+"readfile","removerange","split","splitext","splitpath","sub","throw","tstring",
+"update","writefile"}
 
 ----- makemap -----
 --- make a table from an array of keys and an array of values.
 -- @param t an array of keys
 -- @param tv an array of values
 -- @return a table where `{[t[i]]=tv[i]}`
--- @usage makemap({'power','glory'},{20,30}) is {power=20,glory=30}
+-- @usage makemap({'power','glory'},{20,30}) --> {power=20,glory=30}
 = makemap({'power','glory'},{20,30})
 {glory=30,power=20}
 
@@ -260,12 +271,12 @@ Microlight table-creating utilities. The return value is a table.
 --- create an array of numbers from start to end.
 -- With one argument it goes `1..x1`. `d` may be a
 -- floating-point fraction
--- @param x1 start value
+-- @param x1 start value if x2 given, otherwise end value (starting from 1)
 -- @param x2 end value
 -- @param d increment (default 1)
 -- @return array of numbers
--- @usage range(2,10) is {2,3,4,5,6,7,8,9,10}
--- @usage range(5) is {1,2,3,4,5}
+-- @usage range(2,10,2) --> {2,4,6,8,10}
+-- @usage range(5) --> {1,2,3,4,5}
 = range(5)
 {1,2,3,4,5}
 = range(2,10)
@@ -273,13 +284,13 @@ Microlight table-creating utilities. The return value is a table.
 
 ----- sub -----
 --- return a slice of an array.
--- Like `string.sub`, the end index may be negative.
+-- Like `string.sub`, negative indices count from the end.
 -- @param t the array
 -- @param i1 the start index, default 1
 -- @param i2 the end index, default #t (like `string.sub`)
 -- @return a new array containing `t[i]` in the specified range
 = sub({1,2,3,4,5,6,7,8,9,10},-7)
-{[12]=4,[13]=5,[14]=6,[15]=7,[16]=8,[17]=9,[9]=1,[10]=2,[11]=3,[18]=10}
+{4,5,6,7,8,9,10}
 
 Microlight set manipulation utilities. The first parameter is a table.
 A set consists of the keys of a table.
@@ -288,9 +299,19 @@ A set consists of the keys of a table.
 --- make a bag (multiset) from a table; can be used as a set
 -- @param t a table
 -- @return a table of the number of times each key appears as a value in t
--- @usage bag{3,5,6,5,7,3,5} is {[7]=1,[5]=3,[3]=2,[6]=1}
+-- @usage bag{3,5,6,5,7,3,5} --> {[7]=1,[5]=3,[3]=2,[6]=1}
 = bag{3,5,6,5,7,3,5}
 {[7]=1,[5]=3,[3]=2,[6]=1}
+
+----- contains -----
+--- are all the keys of `other` in `t`?
+-- @param t a set (i.e. a table whose keys are the set elements)
+-- @param other a possible subset
+-- @treturn bool
+= contains(coroutine,{resume=1,yield=2})
+true
+= contains({5,6,7,8,9},{1,2,3,4}) -- remember the test is on keys!
+true
 
 ----- equalkeys -----
 --- set equality: do these tables have the same keys?
@@ -299,16 +320,6 @@ A set consists of the keys of a table.
 -- @return true or false
 = equalkeys({create=1,resume=2,running=3,status=4,wrap=5,yield=6},coroutine)
 true
-
------ issubset -----
---- are all the keys of `other` in `t`?
--- @param t a set (i.e. a table whose keys are the set elements)
--- @param other a possible subset
--- @treturn bool
-= issubset({resume=1,yield=2},coroutine)
-false
-= issubset({1,2,3,4},{5,6,7,8,9})
-false
 
 Microlight function utilities. The first parameter is anything callable,
 or an expression involving X,Y,Z, taken to be the first three parameters 
@@ -332,24 +343,6 @@ supplied later.
 > g=compose(sqrt,"X+1"); return g(8)
 3
 
------ imap -----
---- map a function over an array.
--- The output must always be the same length as the input, so
--- any `nil` values are mapped to `false`.
--- @param f a function of one or more arguments
--- @param t the array
--- @param ... any extra arguments to the function
--- @return a new array with elements `f(t[i],...)`
-
------ imap2 -----
---- map a function over values from two arrays.
--- Length of output is the size of the smallest array.
--- @param f a function of two or more arguments
--- @param t1 first array
--- @param t2 second array
--- @param ... any extra arguments to the function
--- @return a new array with elements `f(t1[i],t2[i],...)`
-
 ----- memoize -----
 --- 'memoize' a function (cache returned value for next call).
 -- This is useful if you have a function which is relatively expensive,
@@ -363,4 +356,14 @@ supplied later.
 -- @param f a function that returns nil,err if it fails
 -- @return an equivalent function that raises an error
 -- @usage openfile=throw(io.open); myfile=openfile'junk.txt'
-> openfile=throw(io.open); return openfile'junk.txt'
+
+Microlight Array type
+Contents: __concat __eq __index __tostring append apply concat extend
+    filter find indexby indexof init insert range remove sort sorted sub
+
+   x = ml.Array{1,2,3}
+   y = ml.Array{4,5,6}
+   z = y..x
+   print(z,z:sorted)
+
+{4,5,6,1,2,3}	{1,2,3,4,5,6}
