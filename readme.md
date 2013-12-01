@@ -78,10 +78,10 @@ Function arguments
 Any Microlight function that expects a function parameter will actually
 accept any of:
 
-    - a function
-    - any value that has a metafield `__call`.
-    - a string lambda, i.e. a valid Lua expression involving the names
-      `X,Y,Z`, for which the first three arguments will be substituted.
+- a function
+- any value that has a metafield `__call`.
+- a string lambda, i.e. a valid Lua expression involving the names
+  `X,Y,Z`, for which the first three arguments will be substituted.
 
 For example:
 
