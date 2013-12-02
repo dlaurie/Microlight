@@ -23,15 +23,17 @@ The routines included can be classified broadly as follows:
 6. Set manipulation: `bag equalkeys issubset`
 7. Functions: `bind compose memoize throw`
 
-Detailed documentation is available in the `doc` directory (made by running 
-`ldoc .` in the module diectory). The program `ml-demosuite.lua`, which has 
-been designed to take advantage of interactive help (`require"help"`) when 
-available, produces the output `ml-demosuite.txt`.
+Detailed documentation is available in the `doc` directory (made by
+running `ldoc .` in the module directory). The program
+`ml-demosuite.lua`, which has been designed to take advantage of Lua
+Interactive Help (`help=require"ihelp"`) when available, produces the
+output `ml-demosuite.txt`.
 
 Getting started
 ---------------
 
 Fire up an interactive Lua session.
+
     Lua 5.2.2  Copyright (C) 1994-2013 Lua.org, PUC-Rio
     > ml = require'ml'
     > ml.import()
