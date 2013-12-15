@@ -55,11 +55,14 @@ originally selected by Steve Donovan from his comprehensive Penlight
 set of utilities.
 <p>This version has been forked from Microlight 1.1 by Dirk Laurie.
 Compatibility with the original Penlight routines is not aimed at, since
-Microlight is for people that will not be using Penlight. The functions
-`imap, imap2, class, Array, List` have been dropped. `imap, imap2, Array`
-can be found together with some others in `ml-extra`. `List` is a simple
-alias for `Array`, do it yourself if you need it. `class` has not been
-included even there becasue Dirk does not understand it.
+Microlight is for people that will not be using Penlight.
+<p>The functions `imap, imap2, class, Array, List` have been dropped.
+`imap, imap2, Array` can be found together with some others in
+`ml-extra`. `List` is a simple alias for `Array`, do it yourself if you
+need it. `class` has not been included even there because Dirk does not
+understand it. There is a local routine `newtype` in `ml-extra`, less
+ambitious than `class` but with similar functionality which at present
+is not exported.
 <p>The routines included can be classified broadly as follows:
 <p>1. Information: `callable count indexof tstring`
 2. Strings: `escape expand split`
@@ -68,15 +71,15 @@ included even there becasue Dirk does not understand it.
 5. Table creation: `collect ifilter ifind indexby invert keys makemap range sub`
 6. Set manipulation: `bag equalkeys issubset`
 7. Functions: `bind compose memoize throw`
-<p>Detailed documentation is available in the `doc` directory (made by running
-<p>    ldoc -t "Microlight" -p "Microlight" ml.lua
-<p>The program `ml-demosuite.lua`, which has been designed to take
-advantage of interactive help (`require"help"`) when available, produces
-the output `ml-demosuite.txt`.
+<p>Detailed documentation is available in the `doc` directory (made by
+running `ldoc .` in the module directory). The program
+`ml-demosuite.lua`, which has been designed to take advantage of Lua
+Interactive Help (`help=require"ihelp"`) when available, produces the
+output `ml-demosuite.txt`.
 <p>Getting started
 ---------------
 <p>Fire up an interactive Lua session.
-    Lua 5.2.2  Copyright (C) 1994-2013 Lua.org, PUC-Rio
+<p>    Lua 5.2.2  Copyright (C) 1994-2013 Lua.org, PUC-Rio
     > ml = require'ml'
     > ml.import()
     > orig_tostring = tostring; tostring = tstring
@@ -127,6 +130,18 @@ are not allowed. You must then stick to the rules of the generic `for`.
 <p>    > log2 = bind(math.log,nil,2)
     > =log2(1024)
     10
+<p>The `memoize` function stores computed values in a table to avoid
+recomputation. The mapping of arguments to a reference key can be
+customized, allowing functions of several variables to memoized.
+<p>    > serialize = function(...)
+      return table.concat(apply({...},tstring),'|')
+      end
+    > function f(x,y,z) print('f',x,y,z) return x+y+z end
+    > f = memoize(f,serialize)
+    > print(f(1,2,3));  print(f(1,2,3))
+    f  1  2  3
+    6
+    6
 <p>Array arguments
 ---------------
 <p>An array is a table `t` in which only the values corresponding to the

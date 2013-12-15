@@ -9,6 +9,19 @@
 ml=require"ml"
 ml.import()
 function near(x,y) return math.abs(x-y)<0.002 end
+function sum(...)
+   io.write("calling sum!\n")
+   local s=0
+   for k=1,select('#',...) do s=s+select(k,...) end
+   return s
+end
+function serialize(...)
+   local result = {}
+   for k=1,select('#',...) do 
+      result[k] = ml.tstring(select(k,'...'),{raw=1}) 
+   end
+   return table.concat(result,'|')
+end
 loadstring = loadstring or load
 
 ----
@@ -69,7 +82,8 @@ indexof = 'indexof({1.9, 1.99, 1.999, 1.9999, 2},2,near)';
 invert = "invert{A='a',B='b'}";
 keys = "keys(ml)";
 makemap = "makemap({'power','glory'},{20,30})";
-memoize = {};
+memoize = {"f=memoize(sum,serialize); return f(1,2,3,4,5,6,7)",
+   "f(1,2,3,4,5,6,7)"};
 range = {"range(5)","range(2,10)"};
 readfile= 'writefile("tmp.txt",tstring{1,2,3}); return readfile"tmp.txt"';
 removerange = {'t={1,2,3,4,5,6}; removerange(t,2,5); return t'};
@@ -147,7 +161,7 @@ or an expression involving X,Y,Z, taken to be the first three parameters
 supplied later. ]]
 
 for routine in gmatch("bind,compose,memoize,throw","%w+") do
-   demo(routine)
+   demo(routine) 
 end
  
 pcall(require,"ml-extra")
@@ -165,7 +179,7 @@ if ml.Array then
    x = ml.Array{1,2,3}
    y = ml.Array{4,5,6}
    z = y..x
-   print(z,z:sorted)
+   print(z,z:sorted())
 ]]
    x = ml.Array{1,2,3}
    y = ml.Array{4,5,6}

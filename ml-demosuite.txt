@@ -20,7 +20,7 @@ Microlight information utilities
 = callable(near)
 true
 = callable(ml)
-function: 0x8ed8b70
+function: 0x8bdcb98
 = callable(_G)
 nil
 
@@ -192,7 +192,7 @@ Microlight mutating table utilities. The first parameter is a table.
 -- @return the updated table
 -- @usage update({},tbl) --> a shallow copy of t
 = update({A=1,B=2},{Z=26})
-{Z=26,B=2,A=1}
+{Z=26,A=1,B=2}
 
 Microlight table-creating utilities. The return value is a table.
 
@@ -245,7 +245,7 @@ Microlight table-creating utilities. The return value is a table.
 -- @return a table where keys and values swap places
 -- @usage invert{'one','two'} --> {one=1,two=2}
 = invert{A='a',B='b'}
-{b="B",a="A"}
+{a="A",b="B"}
 
 ----- keys -----
 --- extract the keys of a table as an array.
@@ -349,7 +349,14 @@ supplied later.
 -- but you don't know in advance what values will be required, so
 -- building a table upfront is wasteful/impossible.
 -- @param func a function of at least one argument
--- @return a function with at least one argument, which is used as the key.
+-- @param serialize optional routine to convert arguments to a table key
+--   (default: first argument to `func`) 
+-- @return a function that does the same as `func` 
+> f=memoize(sum,serialize); return f(1,2,3,4,5,6,7)
+calling sum!
+28
+= f(1,2,3,4,5,6,7)
+28
 
 ----- throw -----
 --- create a function which will throw an error on failure.
@@ -359,11 +366,12 @@ supplied later.
 
 Microlight Array type
 Contents: __concat __eq __index __tostring append apply concat extend
-    filter find indexby indexof init insert range remove sort sorted sub
+    filter find indexby indexof init insert remove removerange sort sorted
+    sub type unpack update
 
    x = ml.Array{1,2,3}
    y = ml.Array{4,5,6}
    z = y..x
-   print(z,z:sorted)
+   print(z,z:sorted())
 
 {4,5,6,1,2,3}	{1,2,3,4,5,6}

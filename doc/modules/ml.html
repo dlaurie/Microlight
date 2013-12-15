@@ -230,7 +230,7 @@
 	<td class="summary">make a value callable (local)</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#memoize">memoize (func)</a></td>
+	<td class="name" nowrap><a href="#memoize">memoize (func, serialize)</a></td>
 	<td class="summary">'memoize' a function (cache returned value for next call).</td>
 	</tr>
 </table>
@@ -1329,7 +1329,7 @@
 </dd>
     <dt>
     <a name = "memoize"></a>
-    <strong>memoize (func)</strong>
+    <strong>memoize (func, serialize)</strong>
     </dt>
     <dd>
     'memoize' a function (cache returned value for next call).
@@ -1342,12 +1342,16 @@
         <li><span class="parameter">func</span>
          a function of at least one argument
         </li>
+        <li><span class="parameter">serialize</span>
+         optional routine to convert arguments to a table key
+   (default: first argument to `func`)
+        </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        a function with at least one argument, which is used as the key.
+        a function that does the same as `func`
     </ol>
 
 

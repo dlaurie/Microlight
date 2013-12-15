@@ -20,7 +20,7 @@ local S,T = string, table
 local find, sub, match = S.find, S.sub, S.match
 local append,  pack,  unpack,            concat,  sort,  remove = 
     T.insert,T.pack,unpack or T.unpack,T.concat,T.sort,T.remove
-local function_arg, metafield
+local function_arg, metafield, tstring
 
 pack = pack or function(...)
    return {n=select('#',...),...}
@@ -166,6 +166,8 @@ function tbuff (t,level,buff,how)
     end
 
     if type(t)~='table' then append(quote(t,raw),sep) return end
+    local tostr = metafield(t,'__tostring')
+    if tostr and not raw then append(tostr(t)) return end
     local tables = buff.tables
     if tables[t] then append("<cycle "..quote(t).." >",sep); return end    
     tables[t]=true
@@ -183,7 +185,7 @@ function tbuff (t,level,buff,how)
     for key,value in pairs(t) do if not done[key] then
         if type(key)~='string' or not is_iden(key) then
             if type(key)=='table' then
-                key = ml.tstring(key,how)
+                key = tstring(key,how)
             else
                 key = quote(key,how.raw)
             end
@@ -213,15 +215,19 @@ local default_how={}
 -- @return a string
 function ml.tstring (t,how)
     if type(how) == 'number' then how = {indent = how} end
-    if how then default_how=ml.update({},how) else how=default_how end
+    if how then default_how=ml.update({},how) 
+           else how=ml.update({},default_how) 
+    end    
     if type(t) == 'table' then
         local buff = {tables={},len=0,linelen=0}
+        if metafield(t,'__tostring')==ml.tstring then how.raw=true end
         tbuff(t,0,buff,how)
         return concat(buff)     
     else
         return quote(t,how.raw)
     end
 end
+tstring = ml.tstring
 
 ---------------------------------------------------
 -- File and Path functions
@@ -771,16 +777,20 @@ end
 -- but you don't know in advance what values will be required, so
 -- building a table upfront is wasteful/impossible.
 -- @param func a function of at least one argument
--- @return a function with at least one argument, which is used as the key.
-function ml.memoize(func)
-    return setmetatable({}, {
-        __index = function(self, k, ...)
-            local v = func(k,...)
-            self[k] = v
-            return v
-        end,
-        __call = function(self, k) return self[k] end
-    })
+-- @param serialize optional routine to convert arguments to a table key
+--   (default: first argument to `func`) 
+-- @return a function that does the same as `func` 
+function ml.memoize(func,serialize)
+   local cache = {}
+   return function(...)
+      local key = ...
+      if serialize then key=serialize(...) end
+      local val = cache[key] 
+      if val then return val end
+      val = func(...)
+      cache[key] = val
+      return val
+   end
 end
 
 --- make the module table callable; `ml(t)` sets `ml` as a place to
@@ -794,6 +804,7 @@ setmetatable(ml,{__call=
   end })
 
 debug.getregistry().microlight_extra = {new=new, metafield=metafield, 
-   insertinto=insertinto, function_arg=function_arg, quote=quote}
+   insertinto=insertinto, function_arg=function_arg, quote=quote,
+   default_how = function() return default_how end}
 
 return ml
