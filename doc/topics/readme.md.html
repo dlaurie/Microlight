@@ -33,11 +33,11 @@
 
 
 <h2>Topics</h2>
-<ul class="nowrap">
+<ul>
   <li><strong>readme.md</strong></li>
 </ul>
 <h2>Modules</h2>
-<ul class="nowrap">
+<ul>
   <li><a href="../modules/ml.html">ml</a></li>
   <li><a href="../modules/ml-extra.html">ml-extra</a></li>
 </ul>
@@ -48,159 +48,239 @@
 
 <h1>Topic <code>readme.md</code></h1>
 
-    Brief description
------------------
+
+<h2>Brief description</h2>
+
 <p>Microlight is a small but useful library of functions written in Lua,
 originally selected by Steve Donovan from his comprehensive Penlight
-set of utilities.
+set of utilities.</p>
+
 <p>This version has been forked from Microlight 1.1 by Dirk Laurie.
-Compatibility with the original Penlight routines is not aimed at, since
-Microlight is for people that will not be using Penlight.
-<p>The functions `imap, imap2, class, Array, List` have been dropped.
-`imap, imap2, Array` can be found together with some others in
-`ml-extra`. `List` is a simple alias for `Array`, do it yourself if you
-need it. `class` has not been included even there because Dirk does not
-understand it. There is a local routine `newtype` in `ml-extra`, less
-ambitious than `class` but with similar functionality which at present
-is not exported.
-<p>The routines included can be classified broadly as follows:
-<p>1. Information: `callable count indexof tstring`
-2. Strings: `escape expand split`
-3. Files: `exists readfile splitext splitpath writefile`
-4. Mutating tables: `apply extend import removerange update`
-5. Table creation: `collect ifilter ifind indexby invert keys makemap range sub`
-6. Set manipulation: `bag equalkeys issubset`
-7. Functions: `bind compose memoize throw`
-<p>Detailed documentation is available in the `doc` directory (made by
-running `ldoc .` in the module directory). The program
-`ml-demosuite.lua`, which has been designed to take advantage of Lua
-Interactive Help (`help=require"ihelp"`) when available, produces the
-output `ml-demosuite.txt`.
-<p>Getting started
----------------
-<p>Fire up an interactive Lua session.
-<p>    Lua 5.2.2  Copyright (C) 1994-2013 Lua.org, PUC-Rio
-    > ml = require'ml'
-    > ml.import()
-    > orig_tostring = tostring; tostring = tstring
+Compatibility with the original Penlight routines is not aimed at,
+since Microlight is for people that will not be using Penlight.</p>
+
+<p>The functions <code>imap, imap2, class, Array, List</code> have been dropped.
+<code>imap, imap2, Array</code> can be found together with some others in
+<a href="../modules/ml-extra.html#">ml-extra</a> . <code>List</code> is a simple alias for <code>Array</code>; do it yourself if you
+need it. <code>class</code> has not been included even there because Dirk does not
+understand it. There is a local routine <code>newtype</code> in <a href="../modules/ml-extra.html#">ml-extra</a> , less
+ambitious than <code>class</code> but with similar functionality which at present
+is not exported.</p>
+
+<p>The routines included can be classified broadly as follows:</p>
+
+<ol>
+    <li>Information: <code>callable count indexof tstring</code></li>
+    <li>Strings: <code>escape expand split</code></li>
+    <li>Files: <code>exists readfile splitext splitpath writefile</code></li>
+    <li>Mutating tables: <code>apply extend import removerange update</code></li>
+    <li>Table creation: <code>collect ifilter ifind indexby invert keys makemap range sub</code></li>
+    <li>Set manipulation: <code>bag equalkeys issubset</code></li>
+    <li>Functions: <code>bind compose memoize throw</code></li>
+</ol>
+
+<p>Detailed documentation is available in the <code>doc</code> directory (made by
+running <code>ldoc .</code> in the module directory). The program
+<code>ml-demosuite.lua</code>, which has been designed to take advantage of Lua
+Interactive Help (<code>help=require"ihelp"</code>) when available, produces the
+output <code>ml-demosuite.txt</code>.</p>
+
+<h2>Getting started</h2>
+
+<p>Fire up an interactive Lua session.</p>
+
+
+<pre>
+ Lua <span class="number">5.2</span>.<span class="number">2</span>  Copyright (C) <span class="number">1994</span>-<span class="number">2013</span> Lua.org, PUC-Rio
+ &gt; ml = <span class="global">require</span><span class="string">'ml'</span>
+ &gt; ml.import()
+ &gt; orig_tostring = <span class="global">tostring</span>; <span class="global">tostring</span> = tstring
+</pre>
+
 <p>You've just done two things you should not normally do, but for live
-experimentation they are nice to have.
-<p>-   `ml.import()` loads all of Microlight into the global namespace so
-    that you can omit the `ml.` you would otherwise need.
--   `tostring = tstring` causes Microlight's `tstring` to be used
-    whenever anything needs to be converted to a string, in particular
-    when `print` is called. The original `tostring` is saved as
-    `orig_tostring`, and you can as always bypass `tostring` by calling
-    `io.write` instead of `print`.
-<p>For example, strings are quoted, and tables are shown item by item.
-A string that is suspected to be the result of a call to `tstring` will
-not be re-quoted.
-<p>    > io.write(orig_tostring(ml),'\n') -- this style is not gone forever
-    table: 0x82c3740
-    > =tstring(keys(ml),{wrap=72})
-    {"ML_VERSION","apply","bag","bind","callable","collect","compose","count",
-    "equalkeys","escape","exists","expand","extend","ifilter","ifind","imap",
-    "imap2","import","indexby","indexof","invert","issubset","keys","makemap",
-    "memoize","range","readfile","removerange","split","splitext","splitpath",
-    "sub","throw","tstring","update","writefile"}
+experimentation they are nice to have.</p>
+
+<ul>
+    <li><code>ml.import()</code> loads all of Microlight into the global namespace so
+
+<pre>
+ that you can omit the <span class="backtick">`ml.`</span> you would otherwise need.
+</pre>
+</li>
+    <li><code>tostring = tstring</code> causes Microlight's <code>tstring</code> to be used
+
+<pre>
+ whenever anything needs to be converted to a <span class="global">string</span>, <span class="keyword">in</span> particular
+ when <span class="backtick"><a href="http://www.lua.org/manual/5.2/manual.html#pdf-print">print</a> </span> is called. The original <span class="backtick"><a href="http://www.lua.org/manual/5.2/manual.html#pdf-tostring">tostring</a> </span> is saved as
+ <span class="backtick">`orig_tostring`</span>, <span class="keyword">and</span> you can as always bypass <span class="backtick"><a href="http://www.lua.org/manual/5.2/manual.html#pdf-tostring">tostring</a> </span> by calling
+ <span class="backtick"><a href="http://www.lua.org/manual/5.2/manual.html#pdf-io.write">io.write</a> </span> instead of <span class="backtick"><a href="http://www.lua.org/manual/5.2/manual.html#pdf-print">print</a> </span>.
+</pre>
+
+For example, strings are quoted, and tables are shown item by item.
+A string that is suspected to be the result of a call to <code>tstring</code> will
+not be re-quoted.</li>
+</ul>
+
+
+<pre>
+ &gt; <span class="global">io</span>.write(orig_tostring(ml),<span class="string">'\n'</span>) <span class="comment">-- this style is not gone forever
+</span> <span class="global">table</span>: <span class="number">0x82c3740</span>
+ &gt; =tstring(keys(ml),{wrap=<span class="number">72</span>})
+ {<span class="string">"ML_VERSION"</span>,<span class="string">"apply"</span>,<span class="string">"bag"</span>,<span class="string">"bind"</span>,<span class="string">"callable"</span>,<span class="string">"collect"</span>,<span class="string">"compose"</span>,<span class="string">"count"</span>,
+ <span class="string">"equalkeys"</span>,<span class="string">"escape"</span>,<span class="string">"exists"</span>,<span class="string">"expand"</span>,<span class="string">"extend"</span>,<span class="string">"ifilter"</span>,<span class="string">"ifind"</span>,<span class="string">"imap"</span>,
+ <span class="string">"imap2"</span>,<span class="string">"import"</span>,<span class="string">"indexby"</span>,<span class="string">"indexof"</span>,<span class="string">"invert"</span>,<span class="string">"issubset"</span>,<span class="string">"keys"</span>,<span class="string">"makemap"</span>,
+ <span class="string">"memoize"</span>,<span class="string">"range"</span>,<span class="string">"readfile"</span>,<span class="string">"removerange"</span>,<span class="string">"split"</span>,<span class="string">"splitext"</span>,<span class="string">"splitpath"</span>,
+ <span class="string">"sub"</span>,<span class="string">"throw"</span>,<span class="string">"tstring"</span>,<span class="string">"update"</span>,<span class="string">"writefile"</span>}
+</pre>
+
 <p>The optional second argument does customization: in this case, it puts
 in linebreaks as soon as a line gets too long. The customization is
-sticky, i.e. it stays in effect even for implicit calls to `tstring` via
-`print` and `=`, until overridden by another explicit call.
-<p>The routines are fully described in `ml-demosuite.txt`, but let's
-have a few highlights.
-<p>Function arguments
-------------------
+sticky, i.e. it stays in effect even for implicit calls to <code>tstring</code> via
+<a href="http://www.lua.org/manual/5.2/manual.html#pdf-print">print</a>  and <code>=</code>, until overridden by another explicit call.</p>
+
+<p>The routines are fully described in <code>ml-demosuite.txt</code>, but let's
+have a few highlights.</p>
+
+<h2>Function arguments</h2>
+
 <p>Any Microlight function that expects a function parameter will actually
-accept any of:
-<p>- a function
-- any value that has a metafield `__call`.
-- a string lambda, i.e. a valid Lua expression involving the names
-  `X,Y,Z`, for which the first three arguments will be substituted.
-<p>For example:
-<p>    > =ifilter(range(2,48),"X%2~=0 and X%3~=0 and X%5~=0")
-    {7,11,13,17,19,23,29,31,37,41,43,47}
-<p>This demonstrates three Microlight features:
-<p>- The `range` function to give integers in arithmetic progression.
-- Arithmetic expression functions, also known as "string lambdas".
-- The `ifilter` function to select array elements.
+accept any of:</p>
+
+<ul>
+    <li>a function</li>
+    <li>any value that has a metafield <code>__call</code>.</li>
+    <li>a string lambda, i.e. a valid Lua expression involving the names
+    <code>X,Y,Z</code>, for which the first three arguments will be substituted.</li>
+</ul>
+
+<p>For example:</p>
+
+
+<pre>
+ &gt; =ifilter(range(<span class="number">2</span>,<span class="number">48</span>),<span class="string">"X%2~=0 and X%3~=0 and X%5~=0"</span>)
+ {<span class="number">7</span>,<span class="number">11</span>,<span class="number">13</span>,<span class="number">17</span>,<span class="number">19</span>,<span class="number">23</span>,<span class="number">29</span>,<span class="number">31</span>,<span class="number">37</span>,<span class="number">41</span>,<span class="number">43</span>,<span class="number">47</span>}
+</pre>
+
+<p>This demonstrates three Microlight features:</p>
+
+<ul>
+    <li>The <code>range</code> function to give integers in arithmetic progression.</li>
+    <li>Arithmetic expression functions, also known as "string lambdas". </li>
+    <li>The <code>ifilter</code> function to select array elements.</li>
+</ul>
+
 <p>However, if a Microlight function expects an iterator, string lambdas
-are not allowed. You must then stick to the rules of the generic `for`.
-<p>There is some support for functional programming.
-<p>    > log2 = bind(math.log,nil,2)
-    > =log2(1024)
-    10
-<p>The `memoize` function stores computed values in a table to avoid
+are not allowed. You must then stick to the rules of the generic <code>for</code>.</p>
+
+<p>There is some support for functional programming.</p>
+
+
+<pre>
+ &gt; log2 = bind(<span class="global">math</span>.log,<span class="keyword">nil</span>,<span class="number">2</span>)
+ &gt; =log2(<span class="number">1024</span>)
+ <span class="number">10</span>
+</pre>
+
+<p>The <code>memoize</code> function stores computed values in a table to avoid
 recomputation. The mapping of arguments to a reference key can be
-customized, allowing functions of several variables to memoized.
-<p>    > serialize = function(...)
-      return table.concat(apply({...},tstring),'|')
-      end
-    > function f(x,y,z) print('f',x,y,z) return x+y+z end
-    > f = memoize(f,serialize)
-    > print(f(1,2,3));  print(f(1,2,3))
-    f  1  2  3
-    6
-    6
-<p>Array arguments
----------------
-<p>An array is a table `t` in which only the values corresponding to the
-keys being from `1` to `#t` are operated on. As usual, if you do not
-provide your own `__len` metamethod, you have in effect signed an
+customized, allowing functions of several variables to memoized.</p>
+
+
+<pre>
+ &gt; serialize = <span class="keyword">function</span>(...)
+   <span class="keyword">return</span> <span class="global">table</span>.concat(apply({...},tstring),<span class="string">'|'</span>)
+   <span class="keyword">end</span>
+ &gt; <span class="keyword">function</span> f(x,y,z) <span class="global">print</span>(<span class="string">'f'</span>,x,y,z) <span class="keyword">return</span> x+y+z <span class="keyword">end</span>
+ &gt; f = memoize(f,serialize)
+ &gt; <span class="global">print</span>(f(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>));  <span class="global">print</span>(f(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>))
+ f  <span class="number">1</span>  <span class="number">2</span>  <span class="number">3</span>
+ <span class="number">6</span>
+ <span class="number">6</span>
+</pre>
+
+<h2>Array arguments</h2>
+
+<p>An array is a table <code>t</code> in which only the values corresponding to the
+keys being from <code>1</code> to <code>#t</code> are operated on. As usual, if you do not
+provide your own <code>__len</code> metamethod, you have in effect signed an
 agreement that you have read and understood the description of the
-`#` operator as given in the Lua reference manual.
+<code>#</code> operator as given in the Lua reference manual.</p>
+
 <p>Functions that have an array argument and return an array replicate
-a metatable if available.
-<p>    > mt = {__index={type=function() return 'object' end}}
-    > t = setmetatable({1,2,3},mt)
-    > u = sub(t,2)
-    > =u:type()
-    object
-<p>Sets
-----
-<p>A set is a table `s` in which only the keys matter. Even the value
-`false` does not disqualify the key. A bag is a set in which the
+a metatable if available.</p>
+
+
+<pre>
+ &gt; mt = {__index={<span class="global">type</span>=<span class="keyword">function</span>() <span class="keyword">return</span> <span class="string">'object'</span> <span class="keyword">end</span>}}
+ &gt; t = <span class="global">setmetatable</span>({<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>},mt)
+ &gt; u = sub(t,<span class="number">2</span>)
+ &gt; =u:<span class="global">type</span>()
+ object
+</pre>
+
+<h2>Sets</h2>
+
+<p>A set is a table <code>s</code> in which only the keys matter. Even the value
+<code>false</code> does not disqualify the key. A bag is a set in which the
 values indicate the number of available identical copies. Bags can
-be used as sets, but only come into their own in `ml-extra`.
-<p>    > s=bag(split"the quick brown fox jumps over the lazy dog")
-    > =s
-    {lazy=1,dog=1,jumps=1,the=2,brown=1,fox=1,quick=1,over=1}
-    > =issubset(s,{the=falsee,lazy=0,fox="hunted"})
-    true
-<p>String functions
-----------------
-<p>Microlight has a `split` function, which differs from `string.gmatch`
-in two ways:
-<p>1. It returns a table of pieces, not an iterator.
-2. It operates on the separators, not the matching strings.
-<p>There are two common situations where you might prefer `split`:
+be used as sets, but only come into their own in <a href="../modules/ml-extra.html#">ml-extra</a> .</p>
+
+
+<pre>
+ &gt; s=bag(split<span class="string">"the quick brown fox jumps over the lazy dog"</span>)
+ &gt; =s
+ {lazy=<span class="number">1</span>,dog=<span class="number">1</span>,jumps=<span class="number">1</span>,the=<span class="number">2</span>,brown=<span class="number">1</span>,fox=<span class="number">1</span>,quick=<span class="number">1</span>,over=<span class="number">1</span>}
+ &gt; =issubset(s,{the=falsee,lazy=<span class="number">0</span>,fox=<span class="string">"hunted"</span>})
+ <span class="keyword">true</span>
+</pre>
+
+<h2>String functions</h2>
+
+<p>Microlight has a <code>split</code> function, which differs from <a href="http://www.lua.org/manual/5.2/manual.html#pdf-string.gmatch">string.gmatch</a>
+in two ways:</p>
+
+<ol>
+    <li>It returns a table of pieces, not an iterator.</li>
+    <li>It operates on the separators, not the matching strings.</li>
+</ol>
+
+<p>There are two common situations where you might prefer <code>split</code>:
 whitespace-separated words (the default case) and CSV lists, when
-an explicit separator pattern is provided as second argument.
+an explicit separator pattern is provided as second argument.</p>
+
 <p>In the first case we do not want an empty space between a separator
 and one of the ends of the string to count as a piece; in the second
-we do.
-<p>    >  = split(' hello dolly ')
-    {"hello","dolly"}
-    > = split(',one,two,,',',')
-    {",","one","two","",""}
-<p>
-[Splitting](http://lua-users.org/wiki/SplitJoin) is a subtle topic.
+we do. </p>
+
+
+<pre>
+ &gt;  = split(<span class="string">' hello dolly '</span>)
+ {<span class="string">"hello"</span>,<span class="string">"dolly"</span>}
+ &gt; = split(<span class="string">',one,two,,'</span>,<span class="string">','</span>)
+ {<span class="string">","</span>,<span class="string">"one"</span>,<span class="string">"two"</span>,<span class="string">""</span>,<span class="string">""</span>}
+</pre>
+
+<p><a href="http://lua-users.org/wiki/SplitJoin">Splitting</a> is a subtle topic.
 Microlight does not attempt to cover all conceivable scenarios, but
 applies heuristics which give the correct behaviour in the two common
-cases.
-<p>- If the empty string matches the separator, all of the first argument
-is returned as the only piece.
-- If the pattern ends with a magic `+` (i.e. not `%+`), only pieces of
-length greater than 0 are inserted into the table.
-- Otherwise length-zero strings are allowed and the endpoints count as
-delimiters.
-<p>
+cases.</p>
+
+<ul>
+    <li>If the empty string matches the separator, all of the first argument
+    is returned as the only piece.</li>
+    <li>If the pattern ends with a magic <code>+</code> (i.e. not <code>%+</code>), only pieces of
+    length greater than 0 are inserted into the table.</li>
+    <li>Otherwise length-zero strings are allowed and the endpoints count as
+    delimiters.</li>
+</ul>
+
+
 
 
 </div> <!-- id="content" -->
 </div> <!-- id="main" -->
 <div id="about">
-<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.0</a></i>
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.3.12</a></i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
